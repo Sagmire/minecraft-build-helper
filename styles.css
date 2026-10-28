@@ -407,6 +407,64 @@ dialog::backdrop { background: rgb(10 15 8 / 0.55); }
 .missed { margin: 0 0 10px; padding-left: 20px; }
 .missed li { margin: 3px 0; }
 
+/* ---------- Setup ---------- */
+
+#setupDialog { width: min(560px, calc(100vw - 24px)); }
+.setup { text-align: center; }
+.setup h2 { margin: 6px 0 8px; }
+.setup .dialog-foot { margin-top: 24px; }
+.setup-dots { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; }
+.setup-dots span { width: 8px; height: 8px; border-radius: 999px; background: var(--border); }
+.setup-dots span.on { background: var(--primary); }
+.setup-hero { font-size: 3rem; line-height: 1; margin-bottom: 8px; }
+.setup-hero img { width: 72px; height: 72px; border-radius: 12px; image-rendering: pixelated; }
+.setup-parts { list-style: none; padding: 0; margin: 0 auto 14px; display: grid; gap: 4px; text-align: left; max-width: 400px; }
+.setup-options { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-top: 14px; }
+.setup-option {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 14px 10px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.setup-option:hover { border-color: var(--primary); }
+.setup-option.on { border-color: var(--primary); background: var(--primary-soft); }
+.setup-icon { font-size: 1.8rem; line-height: 1.2; }
+.setup-styles { justify-content: center; margin-top: 14px; }
+.badge.for-you { background: #fff1bf; color: #7a5a00; }
+:root[data-theme="dark"] .badge.for-you { background: #4a3d10; color: #ffe08a; }
+
+/* ---------- Tour ---------- */
+
+.tour { position: fixed; inset: 0; z-index: 60; }
+.tour[hidden] { display: none; }
+.tour-spot {
+  position: fixed;
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgb(10 15 8 / 0.6);
+  outline: 3px solid var(--primary);
+  transition: all 0.25s;
+  pointer-events: none;
+}
+.tour-spot.none { left: 50% !important; top: 50% !important; width: 0 !important; height: 0 !important; outline: 0; }
+.tour-tip {
+  position: fixed;
+  width: min(340px, calc(100vw - 24px));
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.35);
+  display: grid;
+  gap: 4px;
+}
+.tour-tip strong { font-size: 1.05rem; }
+.tour-tip p { margin: 2px 0 10px; }
+.tour-actions { display: flex; align-items: center; gap: 8px; }
+.tour-actions .spacer { flex: 1; }
+
 /* ---------- Settings, toast ---------- */
 
 .settings .segmented { flex-wrap: wrap; }

@@ -28,9 +28,9 @@ class TestRun {
     this.checks.push({ what, pass: !!cond, detail: cond ? '' : typeof detail === 'object' ? JSON.stringify(detail) : String(detail) });
   }
 
-  // Opens the app on a tab. welcome: 'skip' closes the first-run welcome, 'keep' leaves it.
+  // Opens the app on a tab. setup: 'skip' skips first-time setup, 'keep' leaves it open.
   // Dialogs are accepted unless dialogs(d) says otherwise.
-  async open({ viewport = { width: 1280, height: 860 }, tab = 'learn', welcome = 'skip', dialogs } = {}) {
+  async open({ viewport = { width: 1280, height: 860 }, tab = 'learn', setup = 'skip', dialogs } = {}) {
     const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
     this.browsers.push(browser);
     const context = await browser.newContext({ viewport, acceptDownloads: true });
@@ -41,7 +41,7 @@ class TestRun {
     page.on('dialog', d => (dialogs ? dialogs(d) : d.type() === 'prompt' ? d.accept('Test') : d.accept()));
     await page.goto(`${APP_URL}#${tab}`);
     await page.waitForSelector('body.ready');
-    if (welcome === 'skip' && tab === 'learn') await page.click('#welcomeDone');
+    if (setup === 'skip') await page.click('#setupSkipBtn');
     page.toast = () => page.textContent('#toast');
     page.saved = () => page.evaluate(() => JSON.parse(localStorage.getItem('minecraftBuildHelper')));
     return page;

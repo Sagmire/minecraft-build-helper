@@ -14,7 +14,12 @@ An app that teaches Minecraft building tricks and good practices.
 - **✅ Checklist**: go through a finished build point by point. Each point links to the tip
   that explains it, and saved reviews show what to work on next time.
 
+The first time it opens, a short setup asks about your building experience (to pick tips for
+you), the styles you like (to star their palettes) and light or dark mode, then offers a quick
+tour of the app. Both can be run again from ⚙️ Settings.
+
 Light and dark mode, works on phones, and everything can be saved to a backup file (⚙️ Settings).
+The Windows installer lets you choose where to install the app.
 
 ## Running it
 

@@ -16,7 +16,8 @@ packaged for Windows with Electron).
 ## Working on it
 
 - One file per tab: `tips.js` (Learn, with the tips in `tips-data.js`), `palettes.js`,
-  `inspiration.js`, `planner.js`, `checklist.js`. Blocks, palettes and gradients are in
+  `inspiration.js`, `planner.js`, `checklist.js`. First-time setup is `setup.js` and the tour
+  is `tour.js`. Blocks, palettes and gradients are in
   `blocks.js`; `app.js` has saving, tabs, settings and backups; photos are stored by `images.js`.
 - `npm test` runs every browser test in `tests/` (`npm test -- <name>` runs one file). Set
   `CHROMIUM_PATH` to use a Chromium that's already installed. GitHub runs them on every push.

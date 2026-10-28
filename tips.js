@@ -39,41 +39,23 @@ function tipPicture(grid, { view = 'front', label = '' } = {}) {
 function renderLearn() {
   const root = document.getElementById('tab-learn');
   const learned = TIPS.filter(t => state.learned.includes(t.id)).length;
-  const shown = TIPS.filter(t => learnView.topic === 'All' || t.topic === learnView.topic);
+  const forYou = recommendedTips();
+  // Tips picked for the player come first.
+  const shown = TIPS.filter(t => learnView.topic === 'All' || t.topic === learnView.topic)
+    .sort((a, b) => forYou.includes(b.id) - forYou.includes(a.id));
 
   setContent(root,
-    !state.welcomed && welcomeCard(),
-    sectionHead('Learn to build better', 'Each card is one trick. Open it to see a common mistake next to a better way, and how to do it.'),
+    sectionHead('Learn to build better', `Each card is one trick. Open it to see a common mistake next to a better way, and how to do it.${forYou.length ? ' Cards marked ⭐ are good ones for you to start with.' : ''}`),
     el('div', { class: 'progress-row' },
       el('div', { class: 'progress', role: 'progressbar', 'aria-valuemin': 0, 'aria-valuemax': TIPS.length, 'aria-valuenow': learned },
         el('span', { style: { width: `${(learned / TIPS.length) * 100}%` } })),
       el('span', { class: 'progress-text' }, `${learned} of ${TIPS.length} tips learned`)),
     chipRow(['All', ...TIP_TOPICS], learnView.topic, topic => { learnView.topic = topic; renderLearn(); }, 'Topics'),
-    el('div', { class: 'card-grid tips-grid' }, ...shown.map(tipCard)),
+    el('div', { class: 'card-grid tips-grid' }, ...shown.map(tip => tipCard(tip, forYou.includes(tip.id)))),
   );
 }
 
-function welcomeCard() {
-  const parts = [
-    ['📘', 'Learn', 'tricks one at a time'],
-    ['🎨', 'Palettes', 'blocks that go together'],
-    ['🖼️', 'Inspiration', 'save pictures you like'],
-    ['📐', 'Planner', 'sketch a build and count blocks'],
-    ['✅', 'Checklist', 'check a finished build'],
-  ];
-  return el('div', { class: 'welcome' },
-    el('h2', {}, 'Welcome! 👋'),
-    el('p', {}, 'This app helps you build better in Minecraft. Here\'s what\'s in it:'),
-    el('ul', { class: 'welcome-list' }, ...parts.map(([icon, name, text]) => el('li', {},
-      el('button', { type: 'button', class: 'link-btn', onclick: () => showTab(name.toLowerCase()) }, `${icon} ${name}`), ` – ${text}`))),
-    el('button', { type: 'button', class: 'btn primary', id: 'welcomeDone', onclick: () => {
-      state.welcomed = true;
-      save();
-      renderLearn();
-    } }, 'Got it'));
-}
-
-function tipCard(tip) {
+function tipCard(tip, forYou) {
   const done = state.learned.includes(tip.id);
   return el('button', { type: 'button', class: `card tip-card${done ? ' done' : ''}`, 'data-tip': tip.id, onclick: () => openTip(tip.id) },
     el('span', { class: 'tip-thumb' }, tipPicture(tip.better.grid, { view: tip.view, label: tip.better.caption })),
@@ -81,7 +63,8 @@ function tipCard(tip) {
       el('span', { class: 'badges' },
         el('span', { class: 'badge' }, tip.topic),
         el('span', { class: `badge ${tip.level.toLowerCase()}` }, tip.level),
-        done && el('span', { class: 'badge learned' }, '✓ Learned')),
+        done && el('span', { class: 'badge learned' }, '✓ Learned'),
+        forYou && el('span', { class: 'badge for-you' }, '⭐ For you')),
       el('strong', { class: 'card-title' }, tip.title),
       el('span', { class: 'card-text' }, tip.summary)));
 }

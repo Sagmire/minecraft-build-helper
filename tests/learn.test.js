@@ -1,16 +1,11 @@
 'use strict';
 
-// Learn tab: the welcome, tip cards, topics, the tip window and "Mark as learned".
+// Learn tab: tip cards, topics, the tip window and "Mark as learned".
 module.exports = async t => {
-  const page = await t.open({ welcome: 'keep' });
+  const page = await t.open();
 
-  t.check('welcome shows on first start', await page.isVisible('.welcome'));
-  await page.click('.welcome .link-btn:has-text("Planner")');
-  t.check('welcome links open their tab', await page.isVisible('#tab-planner'));
-  await page.click('#tabs [data-tab="learn"]');
-  await page.click('#welcomeDone');
-  t.check('"Got it" hides the welcome', !(await page.isVisible('.welcome')));
-  t.check('no stray "false" text after hiding the welcome', !(await page.textContent('#tab-learn')).includes('false'));
+  t.check('no ⭐ tips when setup was skipped', !(await page.isVisible('.badge.for-you')));
+  t.check('no stray "false" text', !(await page.textContent('#tab-learn')).includes('false'));
 
   // Every tip picture is a proper rectangle of known blocks.
   const problems = await page.evaluate(() => TIPS.flatMap(tip => ['mistake', 'better'].flatMap(side => {
@@ -47,5 +42,5 @@ module.exports = async t => {
   t.check('the learned card is marked', await page.isVisible('[data-tip="depth"] .badge.learned'));
   await t.reload(page);
   t.check('learned tips are kept after reopening', (await page.saved()).learned.includes('depth'));
-  t.check('the welcome stays hidden after reopening', !(await page.isVisible('.welcome')));
+  t.check('setup doesn\'t come back after skipping it', !(await page.isVisible('#setupDialog')));
 };

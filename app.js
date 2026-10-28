@@ -14,6 +14,14 @@ const TABS = [
   ['planner', '📐', 'Planner'],
   ['checklist', '✅', 'Checklist'],
 ];
+// One line about each tab, for setup.
+const TAB_BLURBS = {
+  Learn: 'building tricks, one at a time',
+  Palettes: 'blocks that look good together',
+  Inspiration: 'save pictures of builds you like',
+  Planner: 'sketch a build and count the blocks',
+  Checklist: 'check a finished build for things to improve',
+};
 const RENDERERS = {
   learn: () => renderLearn(),
   palettes: () => renderPalettes(),
@@ -99,7 +107,9 @@ function normalizeState(x) {
   const strings = a => (Array.isArray(a) ? [...new Set(a.map(String))] : []);
   return {
     theme: ['light', 'dark', 'system'].includes(x?.theme) ? x.theme : 'system',
-    welcomed: !!x?.welcomed,
+    setupDone: !!x?.setupDone,
+    level: ['new', 'some', 'lots'].includes(x?.level) ? x.level : '',
+    styles: strings(x?.styles).filter(s => PALETTE_STYLES.includes(s)),
     learned: strings(x?.learned).filter(id => tipById(id)),
     favorites: strings(x?.favorites).filter(id => PALETTES.some(p => p.id === id)),
     inspiration: normalizeInspiration(x?.inspiration),
@@ -185,12 +195,8 @@ function openSettings() {
       fileInput),
     el('h3', {}, 'Help'),
     el('div', { class: 'card-actions' },
-      el('button', { type: 'button', class: 'btn', id: 'showWelcomeBtn', onclick: () => {
-        state.welcomed = false;
-        save();
-        dialog.close();
-        showTab('learn');
-      } }, '👋 Show the welcome again')),
+      el('button', { type: 'button', class: 'btn', id: 'settingsTourBtn', onclick: () => { dialog.close(); startTour(); } }, '🧭 Take the tour'),
+      el('button', { type: 'button', class: 'btn', id: 'settingsSetupBtn', onclick: () => { dialog.close(); openSetup(); } }, '👋 Run setup again')),
     el('p', { class: 'hint version' }, `Minecraft Build Helper ${APP_VERSION}`)));
   if (!dialog.open) dialog.showModal();
 }
@@ -244,13 +250,16 @@ async function start() {
   applyTheme();
   buildTabs();
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
-  // Clicking the dark area around a window closes it.
-  for (const dialog of document.querySelectorAll('dialog')) {
+  // Clicking the dark area around a window closes it. Setup only closes with its own buttons
+  // (not Esc or clicking outside), so it isn't lost by accident.
+  for (const dialog of document.querySelectorAll('dialog:not(#setupDialog)')) {
     dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
   }
+  document.getElementById('setupDialog').addEventListener('cancel', e => e.preventDefault());
   window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
   await loadImages();
   showTab(location.hash.slice(1) || 'learn');
+  if (!state.setupDone) openSetup();
   document.body.classList.add('ready');
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 }

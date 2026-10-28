@@ -33,6 +33,11 @@
   <dialog id="tipDialog" aria-label="Tip"></dialog>
   <dialog id="photoDialog" class="wide" aria-label="Photo"></dialog>
   <dialog id="settingsDialog" aria-label="Settings"></dialog>
+  <dialog id="setupDialog" aria-label="Setup"></dialog>
+  <div id="tour" class="tour" hidden>
+    <div id="tourSpot" class="tour-spot"></div>
+    <div id="tourTip" class="tour-tip" role="dialog" aria-live="polite" aria-labelledby="tourTitle"></div>
+  </div>
 
   <script src="blocks.js"></script>
   <script src="tips-data.js"></script>
@@ -42,6 +47,8 @@
   <script src="inspiration.js"></script>
   <script src="planner.js"></script>
   <script src="checklist.js"></script>
+  <script src="setup.js"></script>
+  <script src="tour.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

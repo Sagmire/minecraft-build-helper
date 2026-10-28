@@ -39,6 +39,8 @@ module.exports = async t => {
   await page.evaluate(() => { localStorage.clear(); clearImages(); });
   await t.reload(page);
   t.check('wiping storage empties the app', (await page.saved()) === null || !(await page.saved()).plans.length);
+  t.check('with nothing saved, setup opens again', await page.isVisible('#setupDialog'));
+  await page.click('#setupSkipBtn');
   await page.click('#settingsBtn');
   await page.setInputFiles('#backupFile', file);
   await page.waitForFunction(() => state.plans.length === 1);

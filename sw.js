@@ -4,7 +4,8 @@
 const CACHE = 'minecraft-build-helper-v1';
 const FILES = [
   './', 'index.html', 'styles.css', 'blocks.js', 'tips-data.js', 'images.js', 'tips.js', 'palettes.js',
-  'inspiration.js', 'planner.js', 'checklist.js', 'app.js', 'manifest.webmanifest',
+  'inspiration.js', 'planner.js', 'checklist.js', 'setup.js', 'tour.js',
+  'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
 ];
 

@@ -92,7 +92,7 @@ function renderInspiration() {
   setContent(root,
     sectionHead('Inspiration', 'Save builds you like. Copy a picture from anywhere and press Ctrl + V here, drag photos in, or use Add photos.'),
     el('div', { class: 'toolbar' },
-      el('button', { type: 'button', class: 'btn primary', onclick: () => fileInput.click() }, '➕ Add photos'),
+      el('button', { type: 'button', class: 'btn primary', id: 'addPhotosBtn', onclick: () => fileInput.click() }, '➕ Add photos'),
       el('button', { type: 'button', class: 'btn', id: 'pasteBtn', onclick: pasteFromClipboard }, '📋 Paste'),
       el('button', { type: 'button', class: 'btn', id: 'newCategoryBtn', onclick: addCategory }, '🏷️ New category'),
       fileInput),
