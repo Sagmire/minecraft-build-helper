@@ -1,0 +1,47 @@
+name: Build Windows app
+
+# Every push runs the tests, then builds an installer you can download from the Actions page.
+# Nothing is published yet: automatic updates need a public releases repo first.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # The app's tests (tests/*.test.js) in a real browser. Nothing is built unless they pass.
+  test:
+    runs-on: windows-latest
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: npm test
+
+  build:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run dist
+      # The installer to download from the Actions page, kept for a week. A full artifact storage
+      # quota only skips it rather than failing the build.
+      - uses: actions/upload-artifact@v6
+        continue-on-error: true
+        with:
+          name: Minecraft-Build-Helper-Windows-Installer
+          path: dist/*.exe
+          retention-days: 7

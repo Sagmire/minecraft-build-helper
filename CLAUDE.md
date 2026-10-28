@@ -1,6 +1,7 @@
 # Minecraft Build Helper
 
-An app that teaches Minecraft building tricks and good practices (vanilla JS in the browser).
+An app that teaches Minecraft building tricks and good practices (vanilla JS in the browser,
+packaged for Windows with Electron).
 
 ## Rules from the owner
 
@@ -11,3 +12,14 @@ An app that teaches Minecraft building tricks and good practices (vanilla JS in 
 - Don't open or merge pull requests without asking.
 - **Keep the app simple.** The owner doesn't want so many features that it gets overwhelming.
   Prefer polishing and fixing what's there over suggesting new features.
+
+## Working on it
+
+- One file per tab: `tips.js` (Learn, with the tips in `tips-data.js`), `palettes.js`,
+  `inspiration.js`, `planner.js`, `checklist.js`. Blocks, palettes and gradients are in
+  `blocks.js`; `app.js` has saving, tabs, settings and backups; photos are stored by `images.js`.
+- `npm test` runs every browser test in `tests/` (`npm test -- <name>` runs one file). Set
+  `CHROMIUM_PATH` to use a Chromium that's already installed. GitHub runs them on every push.
+- Bump the version in `package.json` and `APP_VERSION` in `app.js`, and update
+  `release-notes.md` and `README.md` for user-facing changes. Add new files to `sw.js`.
+- Automatic updates aren't set up yet: they need a public releases repo first.

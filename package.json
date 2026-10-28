@@ -1,0 +1,48 @@
+{
+  "name": "minecraft-build-helper",
+  "productName": "Minecraft Build Helper",
+  "version": "1.0.0",
+  "description": "Learn Minecraft building tricks, find block palettes, save inspiration and plan your builds.",
+  "author": "Sagmire",
+  "private": true,
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node tests/run.js",
+    "dist": "electron-builder --win nsis --publish never"
+  },
+  "build": {
+    "appId": "com.sagmire.minecraftbuildhelper",
+    "productName": "Minecraft Build Helper",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "index.html",
+      "styles.css",
+      "*.js",
+      "!sw.js",
+      "manifest.webmanifest",
+      "icons/**",
+      "electron/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Minecraft Build Helper",
+      "artifactName": "Minecraft-Build-Helper-Setup-${version}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "45.0.0",
+    "electron-builder": "26.15.3",
+    "playwright": "1.56.1"
+  }
+}
