@@ -16,7 +16,8 @@ packaged for Windows with Electron).
 ## Working on it
 
 - One file per tab: `tips.js` (Learn, with the tips in `tips-data.js`), `palettes.js`,
-  `inspiration.js`, `planner.js`, `checklist.js`. First-time setup is `setup.js` and the tour
+  `inspiration.js`, `planner.js` (plan list and simple plans; the 3D block planner is
+  `block-planner.js` and the 3D drawing is `view3d.js`), `checklist.js`. First-time setup is `setup.js` and the tour
   is `tour.js`. Blocks, palettes and gradients are in
   `blocks.js`; `app.js` has saving, tabs, settings and backups; photos are stored by `images.js`.
 - `npm test` runs every browser test in `tests/` (`npm test -- <name>` runs one file). Set

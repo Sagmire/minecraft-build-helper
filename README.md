@@ -9,8 +9,13 @@ An app that teaches Minecraft building tricks and good practices.
   gradients for mixing blocks.
 - **🖼️ Inspiration**: save pictures of builds you like. Copy a picture and press Ctrl + V,
   drag photos in, or add files, then sort them into categories (and make your own).
-- **📐 Planner**: sketch a build from above, floor by floor. Draw, erase, fill and undo, then
-  see how many of each block you need (in stacks). Each plan has a to-do list and notes.
+- **📐 Planner**, two kinds of plan:
+  - **Simple plan**: decide what to build. Size, floors, style, block palette, photos from your
+    Inspiration board, steps and notes. When you're ready, turn it into a 3D block plan.
+  - **3D block plan**: place blocks layer by layer on a grid, with a 3D view beside it that you
+    can turn and zoom. Pencil, line, rectangle, walls, circle, fill, eraser and pick-block tools,
+    mirror for symmetrical builds, a hotbar of recent blocks (keys 1–9), copy layer up, undo and
+    redo, and a list of the blocks you need (in stacks).
 - **✅ Checklist**: go through a finished build point by point. Each point links to the tip
   that explains it, and saved reviews show what to work on next time.
 

@@ -1,98 +1,215 @@
 'use strict';
 
-// Planner tab: drawing, erasing, filling, undo, floors, sizes, materials, to-dos and notes.
+// Planner tab: simple plans, turning them into 3D block plans, and the 3D block planner's
+// tools, layers, mirror, hotbar, undo and redo, 3D view and saving.
 module.exports = async t => {
   const page = await t.open({ tab: 'planner' });
-  const cells = (floor = 0) => page.evaluate(f => currentPlan().floors[f].cells, floor);
-  const filled = async (floor = 0) => (await cells(floor)).filter(Boolean).length;
-  // Mouse position of a grid square's centre.
-  const at = async (x, y) => {
+  const plan = () => page.evaluate(() => currentPlan());
+  const layer = async (n = null) => page.evaluate(i => currentPlan().layers[i ?? plannerView.layer].cells, n);
+  const count = async (id = null, n = null) => (await layer(n)).filter(c => (id ? c === id : c)).length;
+  const at = async (x, z) => {
     const box = await (await page.$('#planCanvas')).boundingBox();
-    const n = await page.evaluate(() => currentPlan().size);
-    return [box.x + ((x + 0.5) * box.width) / n, box.y + ((y + 0.5) * box.height) / n];
+    const n = (await plan()).size;
+    return [box.x + ((x + 0.5) * box.width) / n, box.y + ((z + 0.5) * box.height) / n];
   };
   const drag = async (from, to, button = 'left') => {
     await page.mouse.move(...(await at(...from)));
     await page.mouse.down({ button });
-    await page.mouse.move(...(await at(...to)), { steps: 3 });
+    await page.mouse.move(...(await at(...to)), { steps: 4 });
     await page.mouse.up({ button });
   };
+  const click = async (x, z, opts) => page.mouse.click(...(await at(x, z)), opts);
 
+  // ---------- Simple plan ----------
+  t.check('the list offers both kinds of plan', await page.isVisible('#newSimplePlanBtn') && await page.isVisible('#newPlanBtn'));
+  await page.click('#newSimplePlanBtn');
+  t.check('a simple plan has no block grid', await page.isVisible('#planWidth') && !(await page.isVisible('#planCanvas')));
+  await page.fill('#planWidth', '12');
+  await page.press('#planWidth', 'Tab');
+  t.check('an even width shows the odd-width tip', await page.isVisible('.sheet-tip'));
+  await page.click('.sheet-tip .link-btn');
+  t.check('…which opens the tip', await page.isVisible('#tipDialog h2:has-text("Use odd widths")'));
+  await page.keyboard.press('Escape');
+  await page.fill('#planWidth', '13');
+  await page.press('#planWidth', 'Tab');
+  await page.fill('#planDepth', '9');
+  await page.press('#planDepth', 'Tab');
+  await page.fill('#planFloors', '2');
+  await page.press('#planFloors', 'Tab');
+  await page.selectOption('#planStyle', 'Medieval');
+  t.check('palettes in the chosen style come first', (await page.$$eval('#planPalette option', o => o.map(x => x.value)))[1] === 'medieval');
+  await page.selectOption('#planPalette', 'medieval');
+  t.check('the palette\'s blocks are shown', (await page.$$('.plan-sheet .palette-blocks li')).length === 5);
+  await page.fill('#todoInput', 'Pick a spot by the river');
+  await page.press('#todoInput', 'Enter');
+  await page.fill('#planNotes', 'Village at 120, -40');
+
+  // Photos from the Inspiration board.
+  await page.click('#pickPhotosBtn');
+  t.check('with no photos, it points to Inspiration', await page.isVisible('#photoDialog .empty'));
+  await page.click('#photoDialog .close');
+  await page.click('#tabs [data-tab="inspiration"]');
+  await t.paste(page, '#a63');
+  await page.waitForSelector('.photo-tile');
+  await page.click('#tabs [data-tab="planner"]');
+  await page.click('#pickPhotosBtn');
+  await page.click('#photoDialog .pick-photo');
+  await page.click('#pickDoneBtn');
+  await page.waitForSelector('.plan-photos .strip-photo');
+  t.check('inspiration photos can be added to a plan', (await page.$$('.plan-photos .strip-photo')).length === 1);
+
+  let p = await plan();
+  t.check('the simple plan is saved', p.mode === 'simple' && p.width === 13 && p.depth === 9 && p.floorCount === 2 && p.style === 'Medieval' && p.paletteId === 'medieval', p);
+
+  await page.click('#plansBackBtn');
+  t.check('the list shows the simple plan', (await page.textContent('[data-plan] .card-text')).includes('Simple plan · 13 × 9, 2 floors · Medieval'));
+  await page.click('[data-plan]');
+
+  // ---------- Turning it into a 3D block plan ----------
+  await page.click('#toBlocksBtn');
+  p = await plan();
+  t.check('it becomes a 3D block plan with a grid and a 3D view', p.mode === 'blocks' && await page.isVisible('#planCanvas') && await page.isVisible('#view3d'));
+  t.check('the grid is big enough for the build', p.size === 24);
+  t.check('the outline is drawn with the palette\'s base block', await count('cobblestone') === 2 * 13 + 2 * 9 - 4);
+  t.check('notes, steps and photos come along', p.notes === 'Village at 120, -40' && p.todo.length === 1 && p.photoIds.length === 1);
+  t.check('the palette\'s wall block is ready to place', await page.isVisible('.tray-block.on[data-block="oak_planks"]'));
+
+  // ---------- Tools ----------
+  await page.click('#plansBackBtn');
   await page.click('#newPlanBtn');
-  t.check('New plan opens the editor', await page.isVisible('#planCanvas'));
+  t.check('a new 3D plan starts empty with one layer', (await plan()).layers.length === 1 && await count() === 0);
 
   await drag([2, 2], [11, 2]);
-  t.check('dragging draws a line without gaps', await filled() === 10, await filled());
-  t.check('it draws with the picked block', (await cells())[2 * 24 + 2] === 'oak_planks');
-  t.check('materials count the blocks', (await page.textContent('#materials [data-block="oak_planks"] .mat-count')).startsWith('10'));
-
-  await page.click('.tray-block[data-block="cobblestone"]');
-  await drag([2, 3], [2, 9]);
-  await drag([11, 3], [11, 9]);
-  await drag([3, 9], [10, 9]);
-  t.check('a closed outline is drawn', await filled() === 32, await filled());
-
+  t.check('the pencil draws a line without gaps', await count() === 10);
+  await page.click('[data-tool="line"]');
+  await drag([2, 4], [8, 10]);
+  t.check('the line tool draws a straight diagonal', await count() === 17);
+  await page.click('[data-tool="rect"]');
+  await drag([14, 2], [17, 4]);
+  t.check('the rectangle tool fills a rectangle', await count() === 17 + 12);
+  await page.click('[data-tool="walls"]');
+  await drag([2, 13], [8, 19]);
+  t.check('the walls tool draws an outline', await count() === 29 + 24);
   await page.click('[data-tool="fill"]');
   await page.click('.tray-block[data-block="spruce_planks"]');
-  await page.mouse.click(...(await at(5, 5)));
-  t.check('fill fills inside the outline only', (await cells()).filter(id => id === 'spruce_planks').length === 48);
-  await page.click('#undoBtn');
-  t.check('Undo takes the fill back', (await cells()).filter(id => id === 'spruce_planks').length === 0);
+  t.check('picking a block keeps the tool', await page.isVisible('[data-tool="fill"][aria-pressed="true"]'));
+  await click(5, 16);
+  t.check('fill fills inside the walls only', await count('spruce_planks') === 25);
+  await page.click('[data-tool="circle"]');
+  await page.click('.tray-block[data-block="stone_bricks"]');
+  await page.click('[data-tool="circle"]');
+  await drag([17, 15], [20, 15]);
+  const circle = await count('stone_bricks');
+  t.check('the circle tool draws a ring', circle > 12 && circle < 30, circle);
 
-  await page.click('[data-tool="draw"]');
-  await page.mouse.move(...(await at(2, 2)));
+  await page.click('#undoBtn');
+  t.check('Undo takes the last change back', await count('stone_bricks') === 0);
+  await page.click('#redoBtn');
+  t.check('Redo puts it back', await count('stone_bricks') === circle);
+  await page.keyboard.press('Control+z');
+  await page.keyboard.press('Control+y');
+  t.check('Ctrl + Z and Ctrl + Y work too', await count('stone_bricks') === circle);
+
+  await page.click('[data-tool="eraser"]');
+  await click(2, 2);
+  t.check('the eraser removes a block', !(await layer())[2 * 24 + 2]);
+  await page.click('[data-tool="pencil"]');
+  await page.mouse.move(...(await at(3, 2)));
   await page.mouse.down({ button: 'right' });
   await page.mouse.up({ button: 'right' });
-  t.check('right-click erases', !(await cells())[2 * 24 + 2]);
-  await page.click('[data-tool="erase"]');
-  await page.mouse.click(...(await at(3, 2)));
-  t.check('the eraser erases', !(await cells())[2 * 24 + 3] && await filled() === 30);
-  await page.keyboard.press('Control+z');
-  t.check('Ctrl + Z undoes', (await cells())[2 * 24 + 3] === 'oak_planks');
+  t.check('right-click erases with any tool', !(await layer())[2 * 24 + 3]);
 
-  await page.click('#addFloorBtn');
-  t.check('floors can be added', await page.isVisible('.floors .chip.on[data-value="1"]'));
-  await page.click('.tray-block[data-block="glass"]');
-  await page.mouse.click(...(await at(6, 2)));
-  t.check('drawing goes on the floor being looked at', await filled(1) === 1 && await filled(0) === 31);
-  t.check('materials add up every floor', (await page.textContent('.mat-total')).includes('32'));
+  await page.click('[data-tool="picker"]');
+  await click(5, 16);
+  t.check('the picker picks up a block from the grid', await page.evaluate(() => plannerView.block) === 'spruce_planks' && await page.isVisible('[data-tool="pencil"][aria-pressed="true"]'));
+  t.check('used blocks go in the hotbar', (await page.$$('.hotbar-slot')).length >= 2);
+  await page.keyboard.press('2');
+  t.check('number keys pick from the hotbar', await page.evaluate(() => plannerView.block) === 'stone_bricks');
+  await page.keyboard.press('r');
+  t.check('letter keys pick tools', await page.isVisible('[data-tool="rect"][aria-pressed="true"]'));
 
-  await page.click('.floors .chip[data-value="0"]');
-  await page.selectOption('#planPalette', 'castle');
-  t.check('picking a palette shows its blocks', (await page.$$('.tray-block')).length === 6);
-  t.check('…and picks its wall block', await page.isVisible('.tray-block.on[data-block="stone_bricks"]'));
+  await page.click('#blockFind');
+  await page.keyboard.type('glow');
+  t.check('blocks can be found by name', (await page.$$eval('#blockTray .tray-block', b => b.map(x => x.dataset.block))).join() === 'glowstone');
+  t.check('typing in the search box doesn\'t switch tools', await page.isVisible('[data-tool="rect"][aria-pressed="true"]'));
+  await page.click('#blockTray [data-block="glowstone"]');
+  await page.fill('#blockFind', '');
 
-  await page.fill('#todoInput', 'Dig the foundation');
-  await page.press('#todoInput', 'Enter');
-  await page.fill('#todoInput', 'Build the walls');
-  await page.click('#todoAddBtn');
-  await page.check('.todo li:first-child input');
-  await page.fill('#planNotes', 'Near spawn, by the river');
-  await page.fill('#planName', 'Riverside house');
+  // ---------- Mirror ----------
+  await page.click('[data-tool="pencil"]');
+  await page.click('#mirrorBtn');
+  const before = await count();
+  await click(1, 22);
+  const l = await layer();
+  t.check('mirror places the matching block on the other side', l[22 * 24 + 1] === 'glowstone' && l[22 * 24 + 22] === 'glowstone' && await count() === before + 2);
+  await page.click('#mirrorBtn');
+  await click(0, 0);
+  const l2 = await layer();
+  t.check('mirror both ways places four', ['0', '23', `${23 * 24}`, `${23 * 24 + 23}`].every(i => l2[Number(i)] === 'glowstone'));
+  await page.click('#mirrorBtn');
+  t.check('mirror turns off again', (await page.textContent('#mirrorBtn')).includes('Off'));
+
+  // ---------- Layers ----------
+  const ground = await count();
+  await page.click('#copyLayerBtn');
+  t.check('copy layer up adds a copy above and moves to it', (await plan()).layers.length === 2 && await page.evaluate(() => plannerView.layer) === 1 && await count() === ground);
+  await page.click('#addLayerBtn');
+  t.check('new layer above adds an empty layer', (await plan()).layers.length === 3 && await count() === 0);
+  await page.click('#planCanvas', { position: { x: 5, y: 5 } });
+  await page.click('#layerDownBtn');
+  t.check('the layer buttons move between layers', (await page.textContent('#layerLabel')) === 'Layer 2 of 3');
+  await page.keyboard.press(']');
+  t.check('] goes up a layer', (await page.textContent('#layerLabel')) === 'Layer 3 of 3');
+  await page.click('.more-menu summary');
+  await page.click('#deleteLayerBtn');
+  t.check('layers can be deleted', (await plan()).layers.length === 2);
+  await page.click('.toast-action');
+  t.check('…and the delete undone', (await plan()).layers.length === 3);
+  t.check('materials add up every layer', (await page.textContent('.mat-total')).includes(String(ground * 2 + 1)));
+
+  // ---------- 3D view ----------
+  const faces = await page.evaluate(() => renderBuild(document.getElementById('view3d'), currentPlan(), {}));
+  t.check('the 3D view draws the blocks', faces > 50, faces);
+  const yaw = await page.evaluate(() => plannerView.yaw);
+  await page.$eval('#view3d', c => c.scrollIntoView({ block: 'center' }));
+  const box = await (await page.$('#view3d')).boundingBox();
+  await page.mouse.move(box.x + 100, box.y + 100);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 220, box.y + 120, { steps: 5 });
+  await page.mouse.up();
+  t.check('dragging turns the 3D view', Math.abs(await page.evaluate(() => plannerView.yaw) - yaw) > 0.5);
+  await page.click('#turnLeftBtn');
+  await page.mouse.move(box.x + 150, box.y + 150);
+  await page.mouse.wheel(0, -300);
+  t.check('scrolling zooms in', await page.evaluate(() => plannerView.zoom) > 1);
+  await page.click('#resetViewBtn');
+  t.check('Reset goes back to the starting view', await page.evaluate(() => plannerView.zoom === 1 && plannerView.yaw === -0.7));
+  await page.click('#cutAwayBox');
+  await page.click('#layerDownBtn');
+  t.check('"Hide layers above" works', await page.evaluate(() => renderBuild(document.getElementById('view3d'), currentPlan(), { upTo: plannerView.layer })) < faces);
+
+  // ---------- Size, saving ----------
+  await page.click('.more-menu summary');
+  await page.selectOption('#planSize', '32');
+  t.check('the grid can be made bigger, keeping the blocks', (await plan()).size === 32 && await count() === ground);
+  await page.fill('#planName', 'Riverside tower');
   await page.press('#planName', 'Tab');
-
-  let plan = (await page.saved()).plans[0];
-  t.check('to-dos are saved', plan.todo.length === 2 && plan.todo[0].done && !plan.todo[1].done, plan.todo);
-  t.check('notes and name are saved', plan.notes === 'Near spawn, by the river' && plan.name === 'Riverside house');
-
-  await page.selectOption('#planSize', '16');
-  plan = (await page.saved()).plans[0];
-  t.check('the grid can be made smaller, keeping what fits', plan.size === 16 && plan.floors[0].cells.length === 256 && plan.floors[0].cells.filter(Boolean).length === 31);
-  await page.selectOption('#planSize', '48');
-  t.check('…and bigger again', (await page.saved()).plans[0].floors[0].cells.length === 48 * 48);
-
-  await page.click('.floors .chip[data-value="1"]');
-  await page.click('#deleteFloorBtn');
-  t.check('floors can be deleted', (await page.saved()).plans[0].floors.length === 1);
-
   await t.reload(page);
-  t.check('the plan is kept after reopening', await page.isVisible('[data-plan] .card-title:has-text("Riverside house")'));
-  t.check('the plan list shows its size and blocks', (await page.textContent('[data-plan] .card-text')).includes('48 × 48 · 1 floor · 31 blocks'));
-  await page.click('[data-plan]');
-  t.check('opening it shows the drawing', await filled() === 31);
-  await page.click('#plansBackBtn');
+  t.check('plans are kept after reopening', await page.isVisible('[data-plan] .card-title:has-text("Riverside tower")'));
+  t.check('the list shows a 3D picture of the plan', await page.isVisible('[data-plan] canvas.plan-preview'));
+  await page.click('[data-plan]:has-text("Riverside tower")');
+  t.check('opening it shows the same blocks', (await plan()).layers.length === 3 && await count(null, 0) === ground);
+  const stored = await page.evaluate(() => localStorage.getItem('minecraftBuildHelper').length);
+  t.check('plans are saved compactly', stored < 20000, stored);
 
-  await page.click('#newPlanBtn');
   await page.click('#deletePlanBtn');
-  t.check('plans can be deleted', (await page.saved()).plans.length === 1);
+  t.check('plans can be deleted', (await page.evaluate(() => state.plans.length)) === 1);
+
+  // Phone: blocks are a strip above the grid and nothing sticks out sideways.
+  const phone = await t.open({ tab: 'planner', viewport: { width: 375, height: 760 } });
+  await phone.click('#newPlanBtn');
+  const strip = await (await phone.$('.bp-blocks')).boundingBox();
+  const grid = await (await phone.$('#planCanvas')).boundingBox();
+  t.check('on phones the blocks sit above the grid', strip.y < grid.y);
+  t.check('no sideways scrolling in the 3D planner on a phone', await t.noSideScroll(phone));
 };

@@ -127,9 +127,14 @@ function loadState() {
   }
 }
 
+// What gets saved: the state, with block plans packed small (see encodePlan in planner.js).
+function serializeState() {
+  return { ...state, plans: state.plans.map(encodePlan) };
+}
+
 function save() {
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    localStorage.setItem(STORE_KEY, JSON.stringify(serializeState()));
   } catch (e) {
     toast('Couldn\'t save: the app\'s storage is full.');
   }
@@ -167,7 +172,7 @@ const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 function applyTheme() {
   const dark = state.theme === 'dark' || (state.theme === 'system' && darkQuery.matches);
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  if (currentTab === 'planner') drawPlan();
+  if (currentTab === 'planner') redrawPlanner();
 }
 darkQuery.addEventListener('change', () => state && applyTheme());
 
@@ -207,7 +212,7 @@ function backupData() {
     const data = getImage(item.imageId);
     if (data) images[item.imageId] = data;
   }
-  return { app: 'minecraft-build-helper', version: APP_VERSION, saved: new Date().toISOString(), state, images };
+  return { app: 'minecraft-build-helper', version: APP_VERSION, saved: new Date().toISOString(), state: serializeState(), images };
 }
 
 function saveBackup() {

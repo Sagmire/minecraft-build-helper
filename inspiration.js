@@ -169,14 +169,15 @@ function deleteCategory(name) {
   renderInspiration();
 }
 
-// A bigger view of a photo, with arrows to go through the ones being shown.
-function openPhoto(id) {
-  const shown = state.inspiration.items.filter(i => inspirationView.category === ALL_PHOTOS || i.category === inspirationView.category);
+// A bigger view of a photo, with arrows to go through the others in the list (by default the
+// photos being shown on the board).
+function openPhoto(id, list = null) {
+  const shown = list || state.inspiration.items.filter(i => inspirationView.category === ALL_PHOTOS || i.category === inspirationView.category);
   const index = shown.findIndex(i => i.id === id);
   const item = shown[index];
   if (!item) return;
   const dialog = document.getElementById('photoDialog');
-  const go = step => openPhoto(shown[(index + step + shown.length) % shown.length].id);
+  const go = step => openPhoto(shown[(index + step + shown.length) % shown.length].id, list);
   dialog.onkeydown = e => {
     if (e.key === 'ArrowLeft') go(-1);
     if (e.key === 'ArrowRight') go(1);

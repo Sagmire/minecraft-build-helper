@@ -29,7 +29,7 @@ module.exports = async t => {
   await page.waitForSelector('.photo-tile');
   await page.click('#tabs [data-tab="planner"]');
   await page.click('#newPlanBtn');
-  await page.evaluate(() => { currentPlan().floors[0].cells[0] = 'bricks'; save(); });
+  await page.evaluate(() => { currentPlan().layers[0].cells[0] = 'bricks'; save(); });
   await page.click('#settingsBtn');
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#saveBackupBtn')]);
   const file = await download.path();
@@ -44,7 +44,7 @@ module.exports = async t => {
   await page.click('#settingsBtn');
   await page.setInputFiles('#backupFile', file);
   await page.waitForFunction(() => state.plans.length === 1);
-  t.check('loading the backup brings the plan back', (await page.saved()).plans[0].floors[0].cells[0] === 'bricks');
+  t.check('loading the backup brings the plan back', await page.evaluate(() => state.plans[0].layers[0].cells[0]) === 'bricks');
   await page.click('#tabs [data-tab="inspiration"]');
   t.check('loading the backup brings the photo back', await page.$eval('.photo-tile img', img => img.src.startsWith('data:image/')));
 

@@ -9,7 +9,7 @@ const TOUR_STOPS = [
   { tab: 'learn', targets: ['.tip-card'], title: '📘 Learn', text: 'Each card is one building trick. Open it to see a common mistake next to a better way, and how to do it. ⭐ marks good ones to start with.' },
   { tab: 'palettes', targets: ['.palette-card'], title: '🎨 Palettes', text: 'Blocks that look good together. Tap ☆ to keep a favourite, or "Plan a build with it" to use one in the Planner.' },
   { tab: 'inspiration', targets: ['#addPhotosBtn'], title: '🖼️ Inspiration', text: 'Save builds you like: copy a picture from anywhere and press Ctrl + V here, or add photos. Sort them into categories.' },
-  { tab: 'planner', targets: ['#newPlanBtn'], title: '📐 Planner', text: 'Sketch a build from above, floor by floor. It counts how many of each block you\'ll need.' },
+  { tab: 'planner', targets: ['#newPlanChoices'], title: '📐 Planner', text: 'Start with a simple plan to decide what to build, or a 3D block plan to place every block and turn it around to see it from all sides.' },
   { tab: 'checklist', targets: ['.check-group'], title: '✅ Checklist', text: 'Finished a build? Tick what it has. Each point links to the tip that helps with it.' },
   { targets: ['#settingsBtn'], title: '⚙️ Settings', text: 'Light or dark, backups, and this tour again. That\'s it, happy building!' },
 ];

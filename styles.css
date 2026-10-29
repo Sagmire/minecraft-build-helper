@@ -19,6 +19,8 @@
   --plan-bg: #eef3e8;
   --plan-line: rgb(0 0 0 / 0.07);
   --plan-line-strong: rgb(0 0 0 / 0.2);
+  --sky-top: #a9d3f5;
+  --sky-bottom: #e6f3fc;
   color-scheme: light;
 }
 
@@ -40,6 +42,8 @@
   --plan-bg: #262d22;
   --plan-line: rgb(255 255 255 / 0.06);
   --plan-line-strong: rgb(255 255 255 / 0.2);
+  --sky-top: #1d2a3a;
+  --sky-bottom: #2c3b2c;
   color-scheme: dark;
 }
 
@@ -340,43 +344,27 @@ dialog::backdrop { background: rgb(10 15 8 / 0.55); }
 .photo-meta select { grid-column: 1 / -1; }
 .photo-view img { display: block; max-width: 100%; max-height: calc(100vh - 170px); margin: 0 auto; border-radius: 6px; }
 
-/* ---------- Planner ---------- */
+/* ---------- Planner: list ---------- */
 
-.new-plan { display: grid; place-items: center; align-content: center; gap: 4px; min-height: 200px; border-style: dashed; width: 100%; }
-.new-plan-plus { font-size: 2.6rem; line-height: 1; color: var(--primary); }
+.new-plan-choices { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); max-width: 760px; }
+.new-plan { display: grid; justify-items: center; align-content: center; gap: 4px; padding: 20px; min-height: 150px; border-style: dashed; width: 100%; text-align: center; }
+.new-plan-icon { font-size: 2.2rem; line-height: 1.1; }
 .plan-card { overflow: hidden; width: 100%; }
-.plan-preview { display: block; width: 100%; aspect-ratio: 1; height: auto; image-rendering: pixelated; border-bottom: 1px solid var(--border); }
+.plan-preview { display: block; width: 100%; aspect-ratio: 1; height: auto; border-bottom: 1px solid var(--border); background: linear-gradient(var(--sky-top), var(--sky-bottom)); }
+.plan-preview.simple { display: grid; place-items: center; align-content: center; gap: 12px; background: var(--surface-2); }
+.plan-preview-icon { font-size: 3rem; }
+.plan-preview-blocks { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 0 12px; }
 .plan-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+
+/* ---------- Planner: shared parts ---------- */
 
 .planner-top { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
 .plan-name { font-size: 1.2rem; font-weight: 700; max-width: 420px; }
-.planner { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
-.planner .chips { margin-bottom: 10px; }
-.canvas-wrap { overflow: auto; max-width: 100%; }
-#planCanvas {
-  display: block;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  touch-action: none;
-  cursor: crosshair;
-  image-rendering: pixelated;
-}
-.plan-status { min-height: 1.5em; margin: 6px 0 8px; color: var(--muted); font-size: 0.88rem; }
-.current-block { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 0.9rem; color: var(--muted); }
-.current-block strong { color: var(--text); }
-
-.planner-side { display: grid; gap: 14px; }
+.plan-kind { white-space: nowrap; }
 .panel { padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
 .panel h3 { margin: 0 0 8px; }
-.panel > select { margin-bottom: 8px; }
-.tray { display: grid; gap: 4px; }
-.tray.compact { grid-template-columns: repeat(auto-fill, 40px); gap: 4px; margin-bottom: 8px; }
-.tray-block { display: flex; align-items: center; gap: 10px; padding: 3px; border: 2px solid transparent; border-radius: 6px; background: none; }
-.tray-block:hover { background: var(--surface-2); }
-.tray-block.on { border-color: var(--primary); background: var(--primary-soft); }
-.tray.compact .tray-block { padding: 0; }
-.all-blocks { max-height: 320px; overflow: auto; }
-.tray-group { display: block; font-size: 0.78rem; font-weight: 700; color: var(--muted); margin: 6px 0 4px; }
+.panel h3:not(:first-child) { margin-top: 14px; }
+.panel > select, .panel > input { margin-bottom: 8px; }
 
 .materials { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 0.9rem; }
 .materials li { display: flex; align-items: center; gap: 8px; }
@@ -388,6 +376,88 @@ dialog::backdrop { background: rgb(10 15 8 / 0.55); }
 .todo li.done span { text-decoration: line-through; color: var(--muted); }
 .todo .icon-btn { height: 26px; min-width: 26px; font-size: 1rem; }
 .inline-add { display: flex; gap: 6px; }
+
+.plan-photos { display: grid; gap: 8px; justify-items: start; }
+.photo-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.strip-photo { position: relative; width: 96px; }
+.strip-photo img { display: block; width: 96px; height: 72px; object-fit: cover; border-radius: 6px; }
+.strip-x {
+  position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; padding: 0;
+  border: 0; border-radius: 999px; background: rgb(0 0 0 / 0.6); color: #fff; line-height: 1;
+}
+.pick-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.pick-photo { position: relative; padding: 0; border: 3px solid transparent; border-radius: 8px; background: none; overflow: hidden; }
+.pick-photo img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.pick-photo.on { border-color: var(--primary); }
+.pick-tick {
+  position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 24px; height: 24px;
+  border-radius: 999px; background: var(--primary); color: var(--on-primary); font-weight: 800;
+}
+
+/* ---------- Planner: simple plan ---------- */
+
+.simple-plan { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.sheet-side { display: grid; gap: 16px; }
+.sheet-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.field.small { width: 100px; margin-bottom: 10px; }
+.sheet-tip { margin-top: -4px; }
+.plan-next { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 16px; padding: 16px 18px; flex-wrap: wrap; }
+.plan-next p { margin: 2px 0 0; }
+
+/* ---------- Planner: 3D block plan ---------- */
+
+main:has(.block-planner) { max-width: 1560px; }
+.block-planner {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "tools tools tools" "hotbar hotbar hotbar" "blocks grid view";
+  gap: 12px 16px;
+  align-items: start;
+}
+.bp-tools { grid-area: tools; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bp-hotbar { grid-area: hotbar; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.bp-blocks { grid-area: blocks; }
+.bp-grid { grid-area: grid; }
+.bp-view { grid-area: view; }
+.tool-row { flex-wrap: wrap; }
+.tool-row button { display: inline-flex; align-items: center; gap: 5px; }
+.btn.on { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-strong); }
+.undo-redo { display: inline-flex; gap: 6px; margin-left: auto; }
+
+.current-block { display: inline-flex; align-items: center; gap: 8px; }
+.current-block > span:last-child { display: grid; line-height: 1.2; }
+.current-block .hint { font-size: 0.75rem; }
+.hotbar { display: inline-flex; gap: 4px; padding: 4px; border-radius: 8px; background: var(--surface-2); }
+.hotbar-slot { position: relative; padding: 2px; border: 2px solid transparent; border-radius: 6px; background: none; }
+.hotbar-slot.on { border-color: var(--primary); }
+.hotbar-key { position: absolute; right: 3px; bottom: 1px; font-size: 0.68rem; font-weight: 800; color: #fff; text-shadow: 0 0 3px #000, 0 0 2px #000; }
+
+.bp-blocks .tray { max-height: 520px; overflow: auto; display: grid; gap: 2px; }
+.tray-block { display: flex; align-items: center; gap: 10px; padding: 3px; border: 2px solid transparent; border-radius: 6px; background: none; width: 100%; }
+.tray-block:hover { background: var(--surface-2); }
+.tray-block.on { border-color: var(--primary); background: var(--primary-soft); }
+.tray-group { display: block; font-size: 0.78rem; font-weight: 700; color: var(--muted); margin: 8px 0 2px; }
+
+.pane-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }
+.canvas-wrap { overflow: auto; max-width: 100%; }
+#planCanvas { display: block; border: 1px solid var(--border); border-radius: 4px; touch-action: none; cursor: crosshair; image-rendering: pixelated; }
+.plan-status { min-height: 1.5em; margin: 6px 0; color: var(--muted); font-size: 0.88rem; }
+.layer-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.layer-step { display: inline-flex; align-items: center; gap: 6px; margin-right: 4px; }
+.more-menu { position: relative; }
+.more-menu summary { list-style: none; cursor: pointer; }
+.more-menu summary::-webkit-details-marker { display: none; }
+.more-items {
+  position: absolute; z-index: 5; top: calc(100% + 4px); right: 0; display: grid; gap: 10px; min-width: 240px;
+  padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.view-wrap { width: 100%; }
+#view3d { display: block; border: 1px solid var(--border); border-radius: 4px; touch-action: none; cursor: grab; background: linear-gradient(var(--sky-top), var(--sky-bottom)); }
+#view3d:active { cursor: grabbing; }
+.view-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+.check.small { font-size: 0.88rem; align-items: center; }
+.check.small input { margin: 0; }
+.plan-extras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; align-items: start; }
 
 /* ---------- Checklist ---------- */
 
@@ -496,8 +566,30 @@ dialog::backdrop { background: rgb(10 15 8 / 0.55); }
 
 /* ---------- Smaller screens ---------- */
 
+/* Medium screens: the block list goes under the grid and the 3D view. */
+@media (max-width: 1150px) {
+  .block-planner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: "tools tools" "hotbar hotbar" "grid view" "blocks blocks";
+  }
+  .bp-blocks .tray { max-height: 260px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .bp-blocks .tray-group { grid-column: 1 / -1; }
+}
+
+/* Small screens: everything in one column, the 3D view under the grid. */
+@media (max-width: 760px) {
+  .block-planner { grid-template-columns: minmax(0, 1fr); grid-template-areas: "tools" "hotbar" "blocks" "grid" "view"; }
+  /* Blocks become a strip to swipe through, right above the grid. */
+  .bp-blocks .tray { display: flex; max-height: none; overflow-x: auto; gap: 4px; padding-bottom: 4px; }
+  .bp-blocks .tray-block { flex: none; width: 84px; flex-direction: column; gap: 2px; text-align: center; font-size: 0.75rem; }
+  .bp-blocks .tray-block .block-label { text-align: center; }
+  .bp-blocks .tray-group { display: none; }
+  .tool-name { display: none; }
+  .undo-redo { margin-left: 0; }
+}
+
 @media (max-width: 900px) {
-  .planner { grid-template-columns: minmax(0, 1fr); }
+  .simple-plan, .plan-extras { grid-template-columns: minmax(0, 1fr); }
   .tab-link { padding: 8px 10px; }
 }
 
