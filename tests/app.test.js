@@ -16,6 +16,13 @@ module.exports = async t => {
   await page.waitForSelector('body.ready');
   t.check('opening with #checklist shows that tab', await page.isVisible('#tab-checklist'));
 
+  // The empty part of the progress bar has to stand out from the page, not just differ slightly.
+  const contrast = await page.$eval('.progress', p => {
+    const rgb = el => getComputedStyle(el).backgroundColor.match(/\d+/g).slice(0, 3).map(Number);
+    const [a, b] = [rgb(p), rgb(document.body)];
+    return a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0);
+  });
+  t.check('the progress bar shows against the page in light mode', contrast > 40, contrast);
   await page.click('#settingsBtn');
   await page.click('#settingsDialog [data-theme="dark"]');
   t.check('dark mode can be picked', await page.evaluate(() => document.documentElement.dataset.theme) === 'dark');
@@ -50,7 +57,9 @@ module.exports = async t => {
 
   await page.click('#settingsBtn');
   await page.setInputFiles('#backupFile', { name: 'x.json', mimeType: 'application/json', buffer: Buffer.from('{"hello":1}') });
-  t.check('a file that isn\'t a backup is refused', (await page.toast()).includes('isn\'t a Build Helper backup'));
+  // Reading the file takes a moment, so wait for the message.
+  const refused = await page.waitForFunction(() => document.getElementById('toast').textContent.includes('isn\'t a Build Helper backup'), null, { timeout: 5000 }).then(() => true, () => false);
+  t.check('a file that isn\'t a backup is refused', refused);
   await page.click('#settingsDialog .close');
 
   // Every file the page loads is in the offline list.

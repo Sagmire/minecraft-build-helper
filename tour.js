@@ -31,7 +31,9 @@ function endTour() {
 function showTourStop() {
   const stop = TOUR_STOPS[tour.index];
   const last = tour.index === TOUR_STOPS.length - 1;
-  if (stop.tab && currentTab !== stop.tab) showTab(stop.tab);
+  // The planner stop points at the list of plans, so leave any open plan.
+  if (stop.tab === 'planner') plannerView.planId = null;
+  if (stop.tab && (currentTab !== stop.tab || stop.tab === 'planner')) showTab(stop.tab);
   const tip = document.getElementById('tourTip');
   setContent(tip,
     el('span', { class: 'hint', id: 'tourCount' }, `${tour.index + 1} of ${TOUR_STOPS.length}`),

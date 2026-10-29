@@ -252,6 +252,7 @@ function layerBar(plan) {
           pushUndo(plan, 'all');
           plan.layers.splice(v.layer, 1);
           v.layer = Math.max(0, v.layer - 1);
+          v.measure = null;
           afterChange(plan, true);
           toast('Layer deleted.', { label: 'Undo', run: undoBlocks });
         } }, 'Delete this layer'))));

@@ -20,6 +20,7 @@ module.exports = async t => {
   await page.keyboard.press('Escape');
 
   await page.click('#saveReviewBtn');
+  t.check('saving goes back to the top for the next build', await page.evaluate(() => scrollY) === 0);
   t.check('saving clears the list for the next build', (await page.textContent('#reviewScore')) === `0 of ${total}` && !(await page.inputValue('#reviewName')));
   t.check('the saved review is listed', (await page.textContent('.past-reviews')).includes('Starter house'));
   await page.click('.past-reviews summary');

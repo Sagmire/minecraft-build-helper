@@ -73,6 +73,15 @@ module.exports = async t => {
   t.check('"Start building" finishes without the tour', !(await page.isVisible('#tour')) && !(await page.isVisible('#setupDialog')));
   t.check('experienced builders get the trickier tips marked ⭐', await page.isVisible('.tip-card:has(.badge.intermediate) .badge.for-you'));
 
+  // Starting the tour from inside a plan still shows the planner's buttons.
+  await page.click('#tabs [data-tab="planner"]');
+  await page.click('#newPlanBtn');
+  await page.click('#settingsBtn');
+  await page.click('#settingsTourBtn');
+  for (let i = 0; i < 4; i++) await page.click('#tourNextBtn');
+  t.check('the tour\'s planner stop works from inside a plan', await page.isVisible('#newPlanChoices') && await page.$eval('#tourSpot', s => !s.classList.contains('none')));
+  await page.keyboard.press('Escape');
+
   // On a phone the tour fits on the screen.
   const phone = await t.open({ viewport: { width: 375, height: 700 }, setup: 'keep' });
   for (let i = 0; i < 4; i++) await phone.click('#setupNextBtn');

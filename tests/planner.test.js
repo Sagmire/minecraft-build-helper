@@ -42,6 +42,10 @@ module.exports = async t => {
   t.check('palettes in the chosen style come first', (await page.$$eval('#planPalette option', o => o.map(x => x.value)))[1] === 'medieval');
   await page.selectOption('#planPalette', 'medieval');
   t.check('the palette\'s blocks are shown', (await page.$$('.plan-sheet .palette-blocks li')).length === 5);
+  const previewLight = await page.$eval('.size-preview', c => c.toDataURL());
+  await page.evaluate(() => { state.theme = 'dark'; applyTheme(); });
+  t.check('the size preview follows light and dark mode', await page.$eval('.size-preview', c => c.toDataURL()) !== previewLight);
+  await page.evaluate(() => { state.theme = 'light'; applyTheme(); });
   t.check('a 3D size preview shows the build\'s size', await page.isVisible('.size-preview') && (await page.textContent('#sizeCaption')).includes('13 × 9 blocks and 9 high'));
   await page.fill('#todoInput', 'Pick a spot by the river');
   await page.press('#todoInput', 'Enter');
@@ -204,6 +208,13 @@ module.exports = async t => {
   t.check('…which can be on another layer, to measure height', (await page.textContent('#planStatus')).includes('7 across, 7 deep, 2 high'));
   await page.keyboard.press('Escape');
   t.check('Esc clears the ruler', !(await page.evaluate(() => plannerView.measure)));
+  await drag([2, 13], [8, 13]);
+  await page.click('#addLayerBtn');
+  await page.click('.more-menu summary');
+  await page.click('#deleteLayerBtn');
+  t.check('deleting a layer clears the ruler', !(await page.evaluate(() => plannerView.measure)));
+  await page.click('[data-tool="pencil"]');
+  await page.click('[data-tool="ruler"]');
   t.check('the build\'s size is shown', /Build size: \d+ wide × \d+ deep × 3 high/.test(await page.textContent('#sizeReadout')));
   const withSizes = await page.evaluate(() => { const c = document.createElement('canvas'); c.width = c.height = 300; renderBuild(c, currentPlan(), { sizes: true }); return c.toDataURL(); });
   const noSizes = await page.evaluate(() => { const c = document.createElement('canvas'); c.width = c.height = 300; renderBuild(c, currentPlan(), { sizes: false }); return c.toDataURL(); });
@@ -266,4 +277,6 @@ module.exports = async t => {
   const grid = await (await phone.$('#planCanvas')).boundingBox();
   t.check('on phones the blocks sit above the grid', strip.y < grid.y);
   t.check('no sideways scrolling in the 3D planner on a phone', await t.noSideScroll(phone));
+  await phone.click('.more-menu summary');
+  t.check('the More menu fits on a phone screen', await phone.$eval('.more-items', m => { const r = m.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; }));
 };

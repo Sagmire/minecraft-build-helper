@@ -156,7 +156,7 @@ function renderPlanner() {
 // Redraws pictures that use theme colours (after switching light/dark).
 function redrawPlanner() {
   const plan = currentPlan();
-  if (plan?.mode === 'blocks') { drawGrid(); draw3d(); } else if (!plan) renderPlanList();
+  if (plan?.mode === 'blocks') { drawGrid(); draw3d(); } else renderPlanner();
 }
 
 // ---------- The list of plans ----------

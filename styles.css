@@ -212,7 +212,7 @@ textarea.input { resize: vertical; }
 :root[data-theme="dark"] .badge.intermediate { background: #4a3a1a; color: #f0cf8a; }
 
 .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-.progress { flex: 1; max-width: 360px; height: 10px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.progress { flex: 1; max-width: 360px; height: 10px; border-radius: 999px; background: var(--border); overflow: hidden; }
 .progress span { display: block; height: 100%; background: var(--primary); transition: width 0.3s; }
 .progress-text { font-weight: 600; color: var(--muted); font-size: 0.9rem; }
 
@@ -445,13 +445,14 @@ main:has(.block-planner) { max-width: 1560px; }
 .canvas-wrap { overflow: auto; max-width: 100%; }
 #planCanvas { display: block; border: 1px solid var(--border); border-radius: 4px; touch-action: none; cursor: crosshair; image-rendering: pixelated; }
 .plan-status { min-height: 1.5em; margin: 6px 0; color: var(--muted); font-size: 0.88rem; }
-.layer-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+/* The More menu opens under the whole bar, so it stays on screen wherever the button wraps to. */
+.layer-bar { position: relative; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .layer-step { display: inline-flex; align-items: center; gap: 6px; margin-right: 4px; }
-.more-menu { position: relative; }
+.more-menu { position: static; }
 .more-menu summary { list-style: none; cursor: pointer; }
 .more-menu summary::-webkit-details-marker { display: none; }
 .more-items {
-  position: absolute; z-index: 5; top: calc(100% + 4px); right: 0; display: grid; gap: 10px; min-width: 240px;
+  position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; display: grid; gap: 10px; min-width: 240px; max-width: calc(100vw - 32px);
   padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
 }
 .view-wrap { width: 100%; }
@@ -632,4 +633,6 @@ main:has(.block-planner) { max-width: 1560px; }
   .dialog-inner { padding: 16px; }
   .review { padding: 14px; }
   .check-item { flex-direction: column; gap: 2px; }
+  .settings .segmented { display: grid; }
+  .settings .segmented button + button { border-left: 0; border-top: 1px solid var(--border); }
 }

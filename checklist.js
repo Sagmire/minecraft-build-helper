@@ -88,6 +88,7 @@ function renderChecklist() {
           state.review = normalizeReview({});
           save();
           renderChecklist();
+          window.scrollTo(0, 0);
           toast('Review saved. Ready for your next build!');
         } }, '💾 Save review'),
         el('button', { type: 'button', class: 'btn', id: 'startOverBtn', onclick: () => {
