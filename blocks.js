@@ -257,6 +257,7 @@ function blockCanvas(id) {
         }
         case 'water':
           f = 1 + Math.sin((x + y * 2) / 3) * 0.08 + (rand() - 0.5) * 0.05;
+          alpha = 200;
           break;
         case 'flower': {
           const d = Math.hypot(x - 7.5, y - 7.5);

@@ -7,10 +7,12 @@ module.exports = async t => {
   const plan = () => page.evaluate(() => currentPlan());
   const layer = async (n = null) => page.evaluate(i => currentPlan().layers[i ?? plannerView.layer].cells, n);
   const count = async (id = null, n = null) => (await layer(n)).filter(c => (id ? c === id : c)).length;
+  // Mouse position of a grid square's centre (the grid has a band of numbers along two edges).
   const at = async (x, z) => {
+    await page.$eval('#planCanvas', c => { const r = c.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight) c.scrollIntoView({ block: 'center' }); });
     const box = await (await page.$('#planCanvas')).boundingBox();
-    const n = (await plan()).size;
-    return [box.x + ((x + 0.5) * box.width) / n, box.y + ((z + 0.5) * box.height) / n];
+    const [n, g] = await page.evaluate(() => [currentPlan().size, GUTTER]);
+    return [box.x + g + ((x + 0.5) * (box.width - g)) / n, box.y + g + ((z + 0.5) * (box.height - g)) / n];
   };
   const drag = async (from, to, button = 'left') => {
     await page.mouse.move(...(await at(...from)));
@@ -40,6 +42,7 @@ module.exports = async t => {
   t.check('palettes in the chosen style come first', (await page.$$eval('#planPalette option', o => o.map(x => x.value)))[1] === 'medieval');
   await page.selectOption('#planPalette', 'medieval');
   t.check('the palette\'s blocks are shown', (await page.$$('.plan-sheet .palette-blocks li')).length === 5);
+  t.check('a 3D size preview shows the build\'s size', await page.isVisible('.size-preview') && (await page.textContent('#sizeCaption')).includes('13 × 9 blocks and 9 high'));
   await page.fill('#todoInput', 'Pick a spot by the river');
   await page.press('#todoInput', 'Enter');
   await page.fill('#planNotes', 'Village at 120, -40');
@@ -155,7 +158,7 @@ module.exports = async t => {
   t.check('copy layer up adds a copy above and moves to it', (await plan()).layers.length === 2 && await page.evaluate(() => plannerView.layer) === 1 && await count() === ground);
   await page.click('#addLayerBtn');
   t.check('new layer above adds an empty layer', (await plan()).layers.length === 3 && await count() === 0);
-  await page.click('#planCanvas', { position: { x: 5, y: 5 } });
+  await click(0, 0);
   await page.click('#layerDownBtn');
   t.check('the layer buttons move between layers', (await page.textContent('#layerLabel')) === 'Layer 2 of 3');
   await page.keyboard.press(']');
@@ -188,6 +191,56 @@ module.exports = async t => {
   await page.click('#layerDownBtn');
   t.check('"Hide layers above" works', await page.evaluate(() => renderBuild(document.getElementById('view3d'), currentPlan(), { upTo: plannerView.layer })) < faces);
 
+  // ---------- Ruler and sizes ----------
+  await page.click('#cutAwayBox');
+  await page.click('[data-tool="ruler"]');
+  await page.click('#layerUpBtn');
+  await drag([2, 13], [8, 13]);
+  t.check('dragging the ruler measures across', (await page.textContent('#planStatus')).includes('7 across'));
+  await click(2, 13);
+  t.check('a single click waits for a second block', (await page.textContent('#planStatus')).includes('second block'));
+  await page.click('#layerDownBtn');
+  await click(8, 19);
+  t.check('…which can be on another layer, to measure height', (await page.textContent('#planStatus')).includes('7 across, 7 deep, 2 high'));
+  await page.keyboard.press('Escape');
+  t.check('Esc clears the ruler', !(await page.evaluate(() => plannerView.measure)));
+  t.check('the build\'s size is shown', /Build size: \d+ wide × \d+ deep × 3 high/.test(await page.textContent('#sizeReadout')));
+  const withSizes = await page.evaluate(() => { const c = document.createElement('canvas'); c.width = c.height = 300; renderBuild(c, currentPlan(), { sizes: true }); return c.toDataURL(); });
+  const noSizes = await page.evaluate(() => { const c = document.createElement('canvas'); c.width = c.height = 300; renderBuild(c, currentPlan(), { sizes: false }); return c.toDataURL(); });
+  t.check('the 3D view can label sizes', withSizes !== noSizes);
+
+  // ---------- Terrain ----------
+  const needed = await page.textContent('.mat-total');
+  const facesBefore = await page.evaluate(() => renderBuild(document.getElementById('view3d'), currentPlan(), {}));
+  await page.click('#layerDownBtn');
+  await page.click('#terrainModeBtn');
+  t.check('terrain mode shows terrain blocks', await page.isVisible('.bp-blocks h3:has-text("Terrain")') && await page.isVisible('#blockTray [data-block="water"]'));
+  await page.click('[data-cover="grass_block"]');
+  await page.click('#blockTray [data-block="water"]');
+  await page.click('[data-tool="pencil"]');
+  await click(20, 20);
+  const terrain = await page.evaluate(() => currentPlan().layers[0].terrain);
+  t.check('terrain can cover a layer and be drawn on', terrain.filter(id => id === 'grass_block').length === 24 * 24 - 1 && terrain[20 * 24 + 20] === 'water');
+  t.check('terrain isn\'t counted in Blocks needed', (await page.textContent('.mat-total')) === needed);
+  t.check('terrain shows in the 3D view', await page.evaluate(() => renderBuild(document.getElementById('view3d'), currentPlan(), {})) > facesBefore);
+  t.check('…and can be hidden', await page.evaluate(() => renderBuild(document.getElementById('view3d'), currentPlan(), { hideTerrain: true })) === facesBefore);
+  t.check('drawing terrain leaves the build alone', await count(null, 0) === ground);
+  await page.click('#copyLayerBtn');
+  t.check('copy layer up in terrain mode copies the terrain only', await page.evaluate(() => { const l = currentPlan().layers[1]; return l.terrain.filter(Boolean).length === 24 * 24 && !l.cells.some(Boolean); }));
+  await page.click('#undoBtn');
+  await page.click('#buildModeBtn');
+  t.check('back in build mode the build\'s blocks show again', await page.isVisible('#planPalette'));
+  await page.click('#copyLayerBtn');
+  t.check('copy layer up in build mode doesn\'t copy the terrain', await page.evaluate(() => !currentPlan().layers[1].terrain.some(Boolean)));
+  await page.click('#undoBtn');
+  await page.click('[data-tool="eraser"]');
+  await click(20, 20);
+  t.check('erasing in build mode keeps the terrain', await page.evaluate(() => currentPlan().layers[0].terrain[20 * 24 + 20]) === 'water');
+  await page.click('.more-menu summary');
+  await page.click('#addLayerBelowBtn');
+  t.check('a new layer can go below (for ground under the build)', (await plan()).layers.length === 4 && await page.evaluate(() => plannerView.layer) === 0 && await count() === 0);
+  await page.click('#undoBtn');
+
   // ---------- Size, saving ----------
   await page.click('.more-menu summary');
   await page.selectOption('#planSize', '32');
@@ -199,6 +252,7 @@ module.exports = async t => {
   t.check('the list shows a 3D picture of the plan', await page.isVisible('[data-plan] canvas.plan-preview'));
   await page.click('[data-plan]:has-text("Riverside tower")');
   t.check('opening it shows the same blocks', (await plan()).layers.length === 3 && await count(null, 0) === ground);
+  t.check('terrain is kept after reopening', await page.evaluate(() => { const p = currentPlan(); return p.layers[0].terrain[20 * p.size + 20]; }) === 'water');
   const stored = await page.evaluate(() => localStorage.getItem('minecraftBuildHelper').length);
   t.check('plans are saved compactly', stored < 20000, stored);
 

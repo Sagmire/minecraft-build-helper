@@ -401,6 +401,9 @@ dialog::backdrop { background: rgb(10 15 8 / 0.55); }
 .sheet-row { display: flex; gap: 10px; flex-wrap: wrap; }
 .field.small { width: 100px; margin-bottom: 10px; }
 .sheet-tip { margin-top: -4px; }
+.size-figure { margin: 0 0 14px; }
+.size-preview { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); background: linear-gradient(var(--sky-top), var(--sky-bottom)); }
+.size-figure figcaption { margin-top: 4px; }
 .plan-next { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 16px; padding: 16px 18px; flex-wrap: wrap; }
 .plan-next p { margin: 2px 0 0; }
 
@@ -457,6 +460,11 @@ main:has(.block-planner) { max-width: 1560px; }
 .view-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
 .check.small { font-size: 0.88rem; align-items: center; }
 .check.small input { margin: 0; }
+.mode-switch button.on { background: var(--primary); color: var(--on-primary); }
+.terrain-mode .mode-switch button.on { background: #8a6a3a; color: #fff; }
+.terrain-mode #planCanvas { outline: 3px solid #8a6a3a; outline-offset: 2px; }
+.cover-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.size-readout { margin: 10px 0 0; font-weight: 600; font-size: 0.9rem; }
 .plan-extras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 18px; align-items: start; }
 
 /* ---------- Checklist ---------- */

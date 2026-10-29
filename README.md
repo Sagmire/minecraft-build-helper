@@ -11,11 +11,16 @@ An app that teaches Minecraft building tricks and good practices.
   drag photos in, or add files, then sort them into categories (and make your own).
 - **📐 Planner**, two kinds of plan:
   - **Simple plan**: decide what to build. Size, floors, style, block palette, photos from your
-    Inspiration board, steps and notes. When you're ready, turn it into a 3D block plan.
+    Inspiration board, steps and notes, with a 3D size preview showing how wide, deep and high
+    it will be. When you're ready, turn it into a 3D block plan.
   - **3D block plan**: place blocks layer by layer on a grid, with a 3D view beside it that you
     can turn and zoom. Pencil, line, rectangle, walls, circle, fill, eraser and pick-block tools,
     mirror for symmetrical builds, a hotbar of recent blocks (keys 1–9), copy layer up, undo and
     redo, and a list of the blocks you need (in stacks).
+  - **Rulers**: numbered grid edges, a ruler tool that measures across, deep and high (click a
+    block, change layer, click another), and the build's width, depth and height on the 3D view.
+  - **Terrain**: draw what's already in your world (grass, water, sand, stone, trees, hills) to
+    plan around. It shows in 3D but isn't counted in the blocks you need.
 - **✅ Checklist**: go through a finished build point by point. Each point links to the tip
   that explains it, and saved reviews show what to work on next time.
 

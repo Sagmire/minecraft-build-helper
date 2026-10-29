@@ -4,6 +4,8 @@
 // - simple: decide what to build (size, style, palette, inspiration photos, to-dos, notes)
 // - 3D block plans: place every block, layer by layer, with a 3D view (block-planner.js)
 // A simple plan can be turned into a 3D block plan and keeps its notes, to-dos and photos.
+// Each layer of a block plan has the blocks to build (cells) and what's already there in the
+// world (terrain: ground, water, trees), which isn't counted in "Blocks needed".
 
 const PLAN_SIZES = [16, 24, 32, 48];
 const MAX_LAYERS = 64;
@@ -11,6 +13,7 @@ const MAX_LAYERS = 64;
 const plannerView = {
   planId: null, layer: 0, tool: 'pencil', block: 'oak_planks', mirror: 0, ghost: true, cutAway: false,
   undo: [], redo: [], recent: [], search: '', yaw: -0.7, pitch: 0.6, zoom: 1,
+  terrainMode: false, terrainBlock: 'grass_block', measure: null, sizes: true, hideTerrain: false,
 };
 
 function normalizePlan(p) {
@@ -30,7 +33,10 @@ function normalizePlan(p) {
     floorCount: count(p.floorCount, 1, 20),
     photoIds: (Array.isArray(p.photoIds) ? p.photoIds : []).map(String),
     size,
-    layers: (raw.length ? raw : [{}]).slice(0, MAX_LAYERS).map(l => ({ cells: decodeCells(l, size, p.blocks) })),
+    layers: (raw.length ? raw : [{}]).slice(0, MAX_LAYERS).map(l => ({
+      cells: decodeCells(l, size, p.blocks),
+      terrain: decodeCells({ rle: l?.trle, cells: l?.terrain }, size, p.blocks),
+    })),
     todo: (Array.isArray(p.todo) ? p.todo : []).filter(t => t?.text).map(t => ({ id: String(t.id || uid()), text: String(t.text), done: !!t.done })),
     notes: String(p.notes || ''),
     created: Number(p.created) || Date.now(),
@@ -58,20 +64,21 @@ function decodeCells(layer, size, blocks) {
 function encodePlan(plan) {
   const blocks = [''];
   const index = new Map([['', 0]]);
-  const layers = plan.layers.map(layer => {
+  const pack = cells => {
     const runs = [];
     let prev = -1;
     let times = 0;
     const flush = () => { if (times) runs.push(times > 1 ? `${prev}*${times}` : `${prev}`); };
-    for (const id of layer.cells) {
+    for (const id of cells) {
       if (!index.has(id)) { index.set(id, blocks.length); blocks.push(id); }
       const i = index.get(id);
       if (i === prev) times++;
       else { flush(); prev = i; times = 1; }
     }
     flush();
-    return { rle: runs.join(',') };
-  });
+    return runs.join(',');
+  };
+  const layers = plan.layers.map(layer => ({ rle: pack(layer.cells), trle: pack(terrainOf(layer)) }));
   return { ...plan, blocks, layers };
 }
 
@@ -81,6 +88,16 @@ function currentPlan() {
 
 function emptyCells(size) {
   return Array(size * size).fill('');
+}
+
+function newLayer(size) {
+  return { cells: emptyCells(size), terrain: emptyCells(size) };
+}
+
+// A layer's terrain (layers made before terrain existed get an empty one).
+function terrainOf(layer) {
+  if (!layer.terrain || layer.terrain.length !== layer.cells.length) layer.terrain = emptyCells(layer.cells.length);
+  return layer.terrain;
 }
 
 // The block to start with: the palette's wall block, or oak planks.
@@ -299,6 +316,7 @@ function renderSimplePlan(plan) {
           number('Floors', 'floorCount', 20, 'planFloors')),
         plan.width % 2 === 0 && el('p', { class: 'hint sheet-tip' }, '💡 An odd width lets the door sit right in the middle. ',
           el('button', { type: 'button', class: 'link-btn', onclick: () => openTip('odd-widths') }, 'Why? →')),
+        sizePreview(plan),
         el('label', { class: 'field' }, 'Style', el('select', {
           class: 'input', id: 'planStyle',
           onchange: e => { plan.style = e.target.value; touchPlan(plan); renderPlanner(); },
@@ -323,12 +341,49 @@ function renderSimplePlan(plan) {
   );
 }
 
+// A rough 3D box of the build's size with its measurements, so the numbers are easy to picture.
+// Each floor is 4 blocks (a floor and 3-high walls), plus 1 for a flat roof.
+function sizePreview(plan) {
+  const w = Math.min(plan.width, 48);
+  const d = Math.min(plan.depth, 48);
+  const h = plan.floorCount * 4 + 1;
+  const n = Math.max(w, d) + 4;
+  const palette = PALETTES.find(p => p.id === plan.paletteId);
+  const role = (pattern, fallback) => palette?.blocks.find(([, r]) => pattern.test(r))?.[0] || fallback;
+  const [base, walls, roof] = [role(/base/i, 'cobblestone'), role(/walls/i, 'oak_planks'), role(/roof/i, 'dark_oak_planks')];
+  const x0 = Math.floor((n - w) / 2);
+  const z0 = Math.floor((n - d) / 2);
+  const box = { size: n, layers: [] };
+  for (let y = 0; y < h; y++) {
+    const cells = emptyCells(n);
+    for (let x = x0; x < x0 + w; x++) {
+      for (let z = z0; z < z0 + d; z++) {
+        const edge = x === x0 || z === z0 || x === x0 + w - 1 || z === z0 + d - 1;
+        const pane = y % 4 === 2 && edge && (x - x0 + z - z0) % 3 === 1;
+        if (y === h - 1) cells[z * n + x] = roof;
+        else if (y % 4 === 0) cells[z * n + x] = base;
+        else if (edge) cells[z * n + x] = pane ? 'glass' : walls;
+      }
+    }
+    box.layers.push({ cells });
+  }
+  const canvas = el('canvas', { class: 'size-preview', width: 640, height: 360, role: 'img', 'aria-label': `About ${plan.width} wide, ${plan.depth} deep and ${h} high` });
+  const dark = document.documentElement.dataset.theme === 'dark';
+  renderBuild(canvas, box, {
+    sizes: { w: plan.width, d: plan.depth, h }, dpr: 1.4,
+    ground: dark ? '#262d22' : '#eef3e8', line: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)', markColor: dark ? '#7cb84a' : '#4f7f2c',
+    text: dark ? '#e8eee2' : '#1f2a1a', pill: dark ? '#20261d' : '#ffffff',
+  });
+  return el('figure', { class: 'size-figure' }, canvas,
+    el('figcaption', { class: 'hint', id: 'sizeCaption' }, `About ${plan.width} × ${plan.depth} blocks and ${h} high: 4 per floor (a floor and 3-high walls) plus the roof.`));
+}
+
 // Turns a simple plan into a 3D block plan, with the build's outline drawn on the first layer.
 function toBlockPlan(plan) {
   const size = PLAN_SIZES.find(s => s >= Math.max(plan.width, plan.depth) + 4) || PLAN_SIZES.at(-1);
   plan.mode = 'blocks';
   plan.size = size;
-  plan.layers = [{ cells: emptyCells(size) }];
+  plan.layers = [newLayer(size)];
   const palette = PALETTES.find(p => p.id === plan.paletteId);
   const base = palette ? (palette.blocks.find(([, role]) => /base/i.test(role)) || palette.blocks[0])[0] : 'cobblestone';
   const w = Math.min(plan.width, size);
