@@ -38,4 +38,4 @@ The Windows installer lets you choose where to install the app.
 - Tests: `npm test` (runs every test in `tests/` in a real browser).
 
 Every push to `main` runs the tests on GitHub and builds a Windows installer you can download
-from the **Actions** page.
+from the **Actions** page. Published versions (tags like `v1.0.0`) are on the **Releases** page.

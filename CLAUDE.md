@@ -24,4 +24,7 @@ packaged for Windows with Electron).
   `CHROMIUM_PATH` to use a Chromium that's already installed. GitHub runs them on every push.
 - Bump the version in `package.json` and `APP_VERSION` in `app.js`, and update
   `release-notes.md` and `README.md` for user-facing changes. Add new files to `sw.js`.
+- Publishing (only after the owner says "publish"): bump the version, update the notes, push to
+  `main`, then push a matching tag (`git tag v1.1.0 && git push origin v1.1.0`). The workflow
+  tests, builds and puts the installer on this repo's Releases page with `release-notes.md`.
 - Automatic updates aren't set up yet: they need a public releases repo first.
