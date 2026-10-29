@@ -25,6 +25,7 @@ packaged for Windows with Electron).
 - Bump the version in `package.json` and `APP_VERSION` in `app.js`, and update
   `release-notes.md` and `README.md` for user-facing changes. Add new files to `sw.js`.
 - Publishing (only after the owner says "publish"): bump the version, update the notes, push to
-  `main`, then push a matching tag (`git tag v1.1.0 && git push origin v1.1.0`). The workflow
-  tests, builds and puts the installer on this repo's Releases page with `release-notes.md`.
+  `main`, then run the "Build Windows app" workflow on `main` with "publish" ticked (or push a
+  matching `v…` tag, though tag pushes may be blocked from cloud sessions). It tests, builds and
+  puts the installer on this repo's Releases page as `v<version>` with `release-notes.md`.
 - Automatic updates aren't set up yet: they need a public releases repo first.

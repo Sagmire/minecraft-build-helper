@@ -1,13 +1,19 @@
 name: Build Windows app
 
 # Every push runs the tests, then builds an installer you can download from the Actions page.
-# A version tag (e.g. v1.1.0) also publishes a release with the installer on this repo's
-# Releases page. Only publish after checking the build works.
+# A version tag (e.g. v1.1.0), or running this workflow by hand with "publish" ticked, also
+# publishes a release with the installer on this repo's Releases page (named after the version
+# in package.json). Only publish after checking the build works.
 on:
   push:
     branches: [main]
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish this version as a release (uses the version in package.json)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -45,23 +51,28 @@ jobs:
       # it goes on the release instead). A full artifact storage quota only skips it rather than
       # failing the build.
       - uses: actions/upload-artifact@v6
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        if: ${{ !(startsWith(github.ref, 'refs/tags/v') || inputs.publish) }}
         continue-on-error: true
         with:
           name: Minecraft-Build-Helper-Windows-Installer
           path: dist/*.exe
           retention-days: 7
-      # The tag must match the version in package.json, so the release and the app agree.
-      - if: startsWith(github.ref, 'refs/tags/v')
+      # The release is named after the version in package.json; a tag must match it, so the
+      # release and the app agree.
+      - id: version
+        if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
         shell: bash
         run: |
           version=$(node -p "require('./package.json').version")
-          if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
+          if [[ "$GITHUB_REF" == refs/tags/* && "v$version" != "$GITHUB_REF_NAME" ]]; then
             echo "Tag $GITHUB_REF_NAME doesn't match package.json version $version"; exit 1
           fi
-      - if: startsWith(github.ref, 'refs/tags/v')
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+      - if: steps.version.outputs.tag
         uses: softprops/action-gh-release@v3
         with:
-          name: Minecraft Build Helper ${{ github.ref_name }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Minecraft Build Helper ${{ steps.version.outputs.tag }}
           body_path: release-notes.md
           files: dist/*.exe
