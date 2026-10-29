@@ -1,5 +1,20 @@
 /* Minecraft Build Helper. Colours are tokens so light and dark mode share every rule. */
 
+/* Pixelify Sans (SIL Open Font License, fonts/OFL.txt) for headings: a pixel look that's still
+   easy to read. It's bundled, so it works offline. */
+@font-face {
+  font-family: "Pixelify Sans";
+  src: url("fonts/pixelify-sans-latin-600-normal.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pixelify Sans";
+  src: url("fonts/pixelify-sans-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
 :root {
   --bg: #f3f6ee;
   --surface: #ffffff;
@@ -15,12 +30,16 @@
   --good: #3f7f2f;
   --bad: #b3382c;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 4px 14px rgb(0 0 0 / 0.06);
-  --radius: 10px;
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.08), 0 12px 28px rgb(0 0 0 / 0.12);
+  --radius: 12px;
   --plan-bg: #eef3e8;
   --plan-line: rgb(0 0 0 / 0.07);
   --plan-line-strong: rgb(0 0 0 / 0.2);
   --sky-top: #a9d3f5;
   --sky-bottom: #e6f3fc;
+  --page-top: #e2eef6;
+  --font-pixel: "Pixelify Sans", system-ui, sans-serif;
+  --press: rgb(0 0 0 / 0.22);
   color-scheme: light;
 }
 
@@ -39,11 +58,14 @@
   --good: #8ccc6c;
   --bad: #f07a6c;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 14px rgb(0 0 0 / 0.3);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.5), 0 12px 28px rgb(0 0 0 / 0.45);
   --plan-bg: #262d22;
   --plan-line: rgb(255 255 255 / 0.06);
   --plan-line-strong: rgb(255 255 255 / 0.2);
   --sky-top: #1d2a3a;
   --sky-bottom: #2c3b2c;
+  --page-top: #19212b;
+  --press: rgb(0 0 0 / 0.45);
   color-scheme: dark;
 }
 
@@ -53,14 +75,16 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  background: var(--bg);
+  min-height: 100vh;
+  background: linear-gradient(var(--page-top), var(--bg) 360px) no-repeat, var(--bg);
   color: var(--text);
   font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 h1, h2, h3 { line-height: 1.25; margin: 0; }
-h1 { font-size: 1.6rem; }
-h2 { font-size: 1.25rem; }
+h1, h2 { font-family: var(--font-pixel); font-weight: 700; letter-spacing: 0.01em; }
+h1 { font-size: 1.85rem; }
+h2 { font-size: 1.35rem; }
 h3 { font-size: 1rem; margin: 18px 0 6px; }
 p { margin: 0 0 10px; }
 
@@ -81,13 +105,25 @@ button:disabled { cursor: default; opacity: 0.45; }
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 8px 20px;
+  padding: 8px 20px 14px;
+  /* Solid, not frosted: a blur here would pin the phone tab bar to this bar, not the screen. */
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+}
+/* A strip of pixel grass and dirt along the bottom of the top bar. */
+.topbar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 6px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='6' viewBox='0 0 6 3' shape-rendering='crispEdges'%3E%3Cpath fill='%235d9b3a' d='M0 0h6v1H0z'/%3E%3Cpath fill='%2370b247' d='M1 0h1v1H1zM4 0h1v1H4z'/%3E%3Cpath fill='%23866043' d='M0 1h6v2H0z'/%3E%3Cpath fill='%235d9b3a' d='M0 1h1v1H0zM3 1h1v1H3z'/%3E%3Cpath fill='%23704f36' d='M2 2h1v1H2zM5 1h1v1H5z'/%3E%3C/svg%3E") repeat-x;
+  background-size: 12px 6px;
+  image-rendering: pixelated;
 }
 
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; white-space: nowrap; }
-.brand img { border-radius: 6px; image-rendering: pixelated; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-pixel); font-weight: 700; font-size: 1.3rem; white-space: nowrap; }
+.brand img { border-radius: 6px; image-rendering: pixelated; box-shadow: 0 2px 6px rgb(0 0 0 / 0.25); }
 
 .tabs { display: flex; gap: 4px; flex: 1; justify-content: center; }
 
@@ -102,7 +138,7 @@ button:disabled { cursor: default; opacity: 0.45; }
   font-weight: 600;
 }
 .tab-link:hover { background: var(--surface-2); color: var(--text); }
-.tab-link[aria-current="page"] { background: var(--primary-soft); color: var(--primary-strong); }
+.tab-link[aria-current="page"] { background: var(--primary-soft); color: var(--primary-strong); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--primary) 45%, transparent); }
 
 main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 60px; }
 
@@ -122,10 +158,20 @@ main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 60px; }
   background: var(--surface);
   font-weight: 600;
   white-space: nowrap;
+  box-shadow: inset 0 -2px 0 var(--border);
+  transition: transform 0.08s, box-shadow 0.08s, background 0.15s, border-color 0.15s;
 }
 .btn:hover:not(:disabled) { border-color: var(--primary); }
-.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+/* Pressing a button pushes it down, like a block. */
+.btn:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 -1px 0 var(--border); }
+.btn.primary {
+  background: var(--primary);
+  border-color: var(--primary-strong);
+  color: var(--on-primary);
+  box-shadow: inset 0 -3px 0 var(--press), inset 0 1px 0 rgb(255 255 255 / 0.25);
+}
 .btn.primary:hover:not(:disabled) { background: var(--primary-strong); }
+.btn.primary:active:not(:disabled) { box-shadow: inset 0 -1px 0 var(--press); }
 .btn.danger { color: var(--danger); }
 .btn.small { padding: 4px 10px; font-size: 0.88rem; }
 
@@ -170,7 +216,7 @@ textarea.input { resize: vertical; }
   color: var(--muted);
 }
 .chip:hover { color: var(--text); border-color: var(--primary); }
-.chip.on { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.chip.on { background: var(--primary); border-color: var(--primary-strong); color: var(--on-primary); box-shadow: inset 0 -2px 0 var(--press); }
 .chip.add { border-style: dashed; }
 .chip.remove { color: var(--danger); }
 .chip-wrap { display: inline-flex; align-items: center; }
@@ -190,7 +236,7 @@ textarea.input { resize: vertical; }
 .segmented { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
 .segmented button { padding: 7px 12px; border: 0; background: none; font-weight: 600; color: var(--muted); }
 .segmented button + button { border-left: 1px solid var(--border); }
-.segmented button.on { background: var(--primary); color: var(--on-primary); }
+.segmented button.on { background: var(--primary); color: var(--on-primary); box-shadow: inset 0 -2px 0 var(--press); }
 
 .check { display: inline-flex; align-items: flex-start; gap: 8px; cursor: pointer; }
 .check input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--primary); flex: none; }
@@ -241,8 +287,9 @@ textarea.input { resize: vertical; }
   padding: 0;
   color: inherit;
 }
-button.card:hover { border-color: var(--primary); transform: translateY(-1px); }
-button.card { transition: transform 0.15s, border-color 0.15s; }
+button.card { transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s; }
+button.card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+.card-title { font-weight: 700; }
 
 .card-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
 .card-body { display: grid; gap: 6px; padding: 12px 14px 14px; }
@@ -265,6 +312,31 @@ button.card { transition: transform 0.15s, border-color 0.15s; }
 
 /* ---------- Learn ---------- */
 
+/* The banner at the top of Learn: a sky with a little 3D cottage drawn by the app. */
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding: 26px 28px 22px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--sky-top), var(--sky-bottom));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.hero h1 { font-size: 2.3rem; color: #16300c; text-shadow: 0 2px 0 rgb(255 255 255 / 0.5); }
+.hero .intro { color: #2a3d22; margin: 8px 0 16px; max-width: 46ch; font-size: 1.02rem; }
+.hero .progress-row { margin: 0; }
+.hero .progress { background: rgb(255 255 255 / 0.7); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.14), inset 0 1px 2px rgb(0 0 0 / 0.15); height: 12px; }
+.hero .progress-text { color: #2a3d22; }
+.hero-art { display: block; width: 100%; height: auto; max-height: 230px; object-fit: contain; }
+:root[data-theme="dark"] .hero h1 { color: #e9f6dc; text-shadow: 0 2px 0 rgb(0 0 0 / 0.4); }
+:root[data-theme="dark"] .hero .intro, :root[data-theme="dark"] .hero .progress-text { color: #c7d6bd; }
+:root[data-theme="dark"] .hero .progress { background: rgb(255 255 255 / 0.12); }
+
 .welcome {
   margin-bottom: 24px;
   padding: 18px 20px;
@@ -278,6 +350,7 @@ button.card { transition: transform 0.15s, border-color 0.15s; }
 
 .tip-card { overflow: hidden; width: 100%; }
 .tip-card.done { border-color: var(--primary); }
+.tip-card .tip-thumb { border-bottom: 1px solid var(--border); }
 .tip-thumb { display: block; background: #cfe8fb; }
 .tip-picture { display: block; width: 100%; height: auto; image-rendering: pixelated; }
 
@@ -361,7 +434,7 @@ dialog::backdrop { background: rgb(10 15 8 / 0.55); }
 .planner-top { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; }
 .plan-name { font-size: 1.2rem; font-weight: 700; max-width: 420px; }
 .plan-kind { white-space: nowrap; }
-.panel { padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+.panel { padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
 .panel h3 { margin: 0 0 8px; }
 .panel h3:not(:first-child) { margin-top: 14px; }
 .panel > select, .panel > input { margin-bottom: 8px; }
@@ -618,7 +691,13 @@ main:has(.block-planner) { max-width: 1560px; }
     background: var(--surface);
     border-top: 1px solid var(--border);
   }
-  .tab-link { flex: 1; flex-direction: column; gap: 0; padding: 4px 2px; border-radius: 8px; font-size: 0.72rem; }
+  .tab-link { flex: 1; flex-direction: column; gap: 0; padding: 4px 2px; border-radius: 10px; font-size: 0.72rem; }
+  .tab-link[aria-current="page"] { box-shadow: inset 0 3px 0 var(--primary); }
+  .tab-link[aria-current="page"] .tab-icon { transform: translateY(-1px) scale(1.12); }
+  .tab-icon { transition: transform 0.15s; }
+  .hero { grid-template-columns: minmax(0, 1fr); padding: 18px 18px 16px; }
+  .hero h1 { font-size: 1.8rem; }
+  .hero-art { max-height: 170px; order: -1; margin: -6px 0 -4px; }
   .tab-icon { font-size: 1.25rem; }
   main { padding: 16px 16px 96px; }
   h1 { font-size: 1.35rem; }

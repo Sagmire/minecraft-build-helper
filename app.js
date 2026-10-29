@@ -4,7 +4,7 @@
 // every other file's functions are ready when it starts.
 
 const STORE_KEY = 'minecraftBuildHelper';
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 
 // [key, icon, label]
 const TABS = [

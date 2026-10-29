@@ -1,7 +1,7 @@
 {
   "name": "minecraft-build-helper",
   "productName": "Minecraft Build Helper",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Learn Minecraft building tricks, find block palettes, save inspiration and plan your builds.",
   "author": "Sagmire",
   "private": true,
@@ -25,6 +25,7 @@
       "!sw.js",
       "manifest.webmanifest",
       "icons/**",
+      "fonts/**",
       "electron/**"
     ],
     "win": {

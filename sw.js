@@ -1,12 +1,13 @@
 'use strict';
 
 // Keeps the app working offline. Always tries the network first so updates show up straight away.
-const CACHE = 'minecraft-build-helper-v1';
+const CACHE = 'minecraft-build-helper-v2';
 const FILES = [
   './', 'index.html', 'styles.css', 'blocks.js', 'tips-data.js', 'images.js', 'tips.js', 'palettes.js',
   'inspiration.js', 'view3d.js', 'planner.js', 'block-planner.js', 'checklist.js', 'setup.js', 'tour.js',
   'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png',
+  'fonts/pixelify-sans-latin-600-normal.woff2', 'fonts/pixelify-sans-latin-700-normal.woff2',
 ];
 
 self.addEventListener('install', event => {

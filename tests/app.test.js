@@ -16,13 +16,14 @@ module.exports = async t => {
   await page.waitForSelector('body.ready');
   t.check('opening with #checklist shows that tab', await page.isVisible('#tab-checklist'));
 
-  // The empty part of the progress bar has to stand out from the page, not just differ slightly.
-  const contrast = await page.$eval('.progress', p => {
+  // The empty part of the progress bar has to stand out from what's behind it: an outline, or
+  // clearly different colour from the page.
+  const track = await page.$eval('.progress', p => {
     const rgb = el => getComputedStyle(el).backgroundColor.match(/\d+/g).slice(0, 3).map(Number);
     const [a, b] = [rgb(p), rgb(document.body)];
-    return a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0);
+    return { outlined: /0px 0px 0px 1px inset/.test(getComputedStyle(p).boxShadow), contrast: a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0) };
   });
-  t.check('the progress bar shows against the page in light mode', contrast > 40, contrast);
+  t.check('the progress bar shows against the page in light mode', track.outlined || track.contrast > 40, track);
   await page.click('#settingsBtn');
   await page.click('#settingsDialog [data-theme="dark"]');
   t.check('dark mode can be picked', await page.evaluate(() => document.documentElement.dataset.theme) === 'dark');
@@ -73,6 +74,10 @@ module.exports = async t => {
   const phone = await t.open({ viewport: { width: 375, height: 760 } });
   const navBox = await (await phone.$('#tabs')).boundingBox();
   t.check('on phones the tabs sit at the bottom', navBox.y + navBox.height >= 755);
+  t.check('on phones the tab bar doesn\'t cover the settings button', await phone.$eval('#settingsBtn', b => {
+    const r = b.getBoundingClientRect();
+    return document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)?.closest('#settingsBtn') === b;
+  }));
   for (const tab of ['learn', 'palettes', 'inspiration', 'planner', 'checklist']) {
     await phone.click(`#tabs [data-tab="${tab}"]`);
     if (tab === 'inspiration') { await t.paste(phone); await phone.waitForSelector('.photo-tile'); }
