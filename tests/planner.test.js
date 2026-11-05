@@ -227,6 +227,7 @@ module.exports = async t => {
   await page.click('#terrainModeBtn');
   t.check('terrain mode shows terrain blocks', await page.isVisible('.bp-blocks h3:has-text("Terrain")') && await page.isVisible('#blockTray [data-block="water"]'));
   await page.click('[data-cover="grass_block"]');
+  t.check('covering a layer offers Undo', await page.isVisible('#toast.show .toast-action'));
   await page.click('#blockTray [data-block="water"]');
   await page.click('[data-tool="pencil"]');
   await click(20, 20);
@@ -269,6 +270,18 @@ module.exports = async t => {
 
   await page.click('#deletePlanBtn');
   t.check('plans can be deleted', (await page.evaluate(() => state.plans.length)) === 1);
+
+  // An Undo message goes away when you leave the plan or switch tabs (Undo would do nothing there).
+  await page.click('#newPlanBtn');
+  await page.click('#terrainModeBtn');
+  await page.click('[data-cover="water"]');
+  await page.click('#plansBackBtn');
+  t.check('leaving a plan clears its Undo message', !(await page.isVisible('#toast.show')));
+  await page.click('[data-plan]');
+  await page.click('#terrainModeBtn');
+  await page.click('[data-cover="sand"]');
+  await page.click('#tabs [data-tab="learn"]');
+  t.check('switching tabs clears an Undo message', !(await page.isVisible('#toast.show')));
 
   // Phone: blocks are a strip above the grid and nothing sticks out sideways.
   const phone = await t.open({ tab: 'planner', viewport: { width: 375, height: 760 } });

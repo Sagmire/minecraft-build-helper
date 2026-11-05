@@ -63,10 +63,16 @@ module.exports = async t => {
   t.check('a file that isn\'t a backup is refused', refused);
   await page.click('#settingsDialog .close');
 
+  // The pixel font for headings is bundled and actually loads (a wrong path would quietly fall back).
+  const fontLoaded = await page.evaluate(async () => { await document.fonts.load('700 20px "Pixelify Sans"'); return document.fonts.check('700 20px "Pixelify Sans"'); });
+  t.check('the heading font loads', fontLoaded);
+
   // Every file the page loads is in the offline list.
   const sw = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
   const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   const used = [...html.matchAll(/(?:src|href)="([^"#:]+)"/g)].map(m => m[1]);
+  const css = fs.readFileSync(path.join(ROOT, 'styles.css'), 'utf8');
+  used.push(...[...css.matchAll(/url\("(fonts\/[^"]+)"\)/g)].map(m => m[1]));
   const missing = used.filter(f => !sw.includes(`'${f}'`));
   t.check('sw.js lists every file the page uses', !missing.length, missing);
 

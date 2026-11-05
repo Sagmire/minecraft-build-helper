@@ -97,6 +97,11 @@ function hideToast() {
   document.getElementById('toast').classList.remove('show');
 }
 
+// An Undo message only makes sense where the change was made, so it goes when you move on.
+function hideUndoToast() {
+  if (document.querySelector('#toast .toast-action')) hideToast();
+}
+
 // ---------- Saving ----------
 
 function defaultState() {
@@ -152,6 +157,7 @@ function buildTabs() {
 function showTab(name) {
   if (!RENDERERS[name]) name = 'learn';
   const changed = name !== currentTab;
+  if (changed) hideUndoToast();
   currentTab = name;
   for (const [key] of TABS) {
     document.getElementById(`tab-${key}`).hidden = key !== name;

@@ -206,7 +206,7 @@ function planCard(plan) {
 
 function planTopBar(plan) {
   return el('div', { class: 'planner-top' },
-    el('button', { type: 'button', class: 'btn', id: 'plansBackBtn', onclick: () => { plannerView.planId = null; renderPlanner(); } }, '← All plans'),
+    el('button', { type: 'button', class: 'btn', id: 'plansBackBtn', onclick: () => { plannerView.planId = null; hideUndoToast(); renderPlanner(); } }, '← All plans'),
     el('input', {
       class: 'input plan-name', id: 'planName', value: plan.name, 'aria-label': 'Plan name',
       onchange: e => { plan.name = e.target.value.trim() || 'My build'; touchPlan(plan); },
